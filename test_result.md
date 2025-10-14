@@ -239,8 +239,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "API endpoint để dịch và tái cấu trúc nội dung crypto"
-    - "API endpoint để tạo nội dung social media"
     - "Cập nhật button labels với emoji tiếng Việt"
   stuck_tasks: []
   test_all: false
