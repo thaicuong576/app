@@ -378,12 +378,12 @@ const Workshop = () => {
                   {translating ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Translating...
+                      Đang dịch...
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-5 w-5" />
-                      Translate & Restructure
+                      🚀 Dịch và Tái cấu trúc
                     </>
                   )}
                 </Button>
@@ -397,12 +397,12 @@ const Workshop = () => {
                   {generatingSocial ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Generating...
+                      Đang tạo...
                     </>
                   ) : (
                     <>
                       <Share2 className="mr-2 h-5 w-5" />
-                      Generate Social Content
+                      ✍️ Tạo Content Social
                     </>
                   )}
                 </Button>
