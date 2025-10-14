@@ -196,6 +196,21 @@ def test_translate_endpoint(project_id):
             else:
                 print_error("✗ Crypto terms not properly preserved")
             
+            # Check 7: Verify correct order (Meta description → Sapo → Giới thiệu → ... → Kết luận)
+            meta_pos = translated_content.find("**Meta description**")
+            sapo_pos = translated_content.find("**Sapo**")
+            intro_pos = translated_content.find("Giới thiệu")
+            conclusion_pos = translated_content.find("Kết luận")
+            
+            if (meta_pos < sapo_pos < intro_pos < conclusion_pos and 
+                meta_pos != -1 and sapo_pos != -1 and intro_pos != -1 and conclusion_pos != -1):
+                print_success("✓ Sections appear in correct order: Meta → Sapo → Giới thiệu → ... → Kết luận")
+                checks_passed += 1
+                total_checks += 1
+            else:
+                print_error("✗ Sections not in correct order")
+                total_checks += 1
+            
             print_info(f"Translation quality: {checks_passed}/{total_checks} checks passed")
             
             # Show sample of translated content
