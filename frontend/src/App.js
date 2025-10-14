@@ -427,69 +427,27 @@ const Workshop = () => {
       <Dialog open={showSocialModal} onOpenChange={setShowSocialModal}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto" data-testid="social-modal">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Social Media Content</DialogTitle>
-            <DialogDescription>Ready-to-use content for your social channels</DialogDescription>
+            <DialogTitle className="text-2xl font-bold">Nội dung Social Media</DialogTitle>
+            <DialogDescription>Nội dung sẵn sàng để đăng lên các kênh mạng xã hội</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 mt-4">
             {socialContent?.facebook && (
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-lg text-slate-900">Facebook / LinkedIn</h3>
+                  <h3 className="font-semibold text-lg text-slate-900">Bài đăng Social Media</h3>
                   <Button
                     data-testid="copy-facebook-btn"
                     size="sm"
                     variant="outline"
-                    onClick={() => handleCopyText(socialContent.facebook, 'Facebook post')}
+                    onClick={() => handleCopyText(socialContent.facebook, 'Nội dung social')}
                     className="rounded-full"
                   >
                     <Copy className="h-4 w-4 mr-1" />
-                    Copy
+                    Sao chép
                   </Button>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                   <p className="text-slate-700 whitespace-pre-wrap">{socialContent.facebook}</p>
-                </div>
-              </div>
-            )}
-
-            {socialContent?.twitter && (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-lg text-slate-900">Twitter / X</h3>
-                  <Button
-                    data-testid="copy-twitter-btn"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleCopyText(socialContent.twitter, 'Tweet')}
-                    className="rounded-full"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copy
-                  </Button>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-slate-700 whitespace-pre-wrap">{socialContent.twitter}</p>
-                </div>
-              </div>
-            )}
-
-            {socialContent?.hashtags && (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-lg text-slate-900">Hashtags</h3>
-                  <Button
-                    data-testid="copy-hashtags-btn"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleCopyText(socialContent.hashtags, 'Hashtags')}
-                    className="rounded-full"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copy
-                  </Button>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-indigo-600 font-medium whitespace-pre-wrap">{socialContent.hashtags}</p>
                 </div>
               </div>
             )}
