@@ -263,21 +263,35 @@ async def translate_content(project_id: str, request: TranslateRequest):
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"translate_{project_id}",
-            system_message="You are a professional bilingual English-Vietnamese marketing and editorial expert."
+            system_message="Bạn là chuyên gia viết báo crypto chuyên nghiệp, có nhiều năm kinh nghiệm viết về blockchain và cryptocurrency cho các tờ báo Việt Nam."
         ).with_model("gemini", "gemini-2.5-pro")
         
-        # Create translation prompt
-        prompt = f"""Please perform the following two tasks sequentially with the provided text:
+        # Create translation prompt with custom preset
+        prompt = f"""Tôi yêu cầu bạn, nhiệm vụ chính là: 
 
-Task 1: Professional Translation
-Translate the entire text into Vietnamese. Maintain a professional and formal tone. DO NOT translate technical terms, product names, or technology names.
+- Với mỗi nội dung tôi gửi bạn, đó là bài article, bạn hãy dịch sang tiếng việt và đổi phong cách viết thành cách viết của các bên báo VN, không quá shill dự án, giữ các thuật ngữ crypto nhé, và vẫn giữ format heading.
+- Các heading và title chỉ viết hoa chữ cái đầu tiên trong câu hoặc từ khoá quan trọng.
+- Để thêm các bản dịch tiếng Việt trong dấu ngoặc đơn cho tất cả các thuật ngữ crypto khó hiểu nhé
+- Các heading, đổi cách viết cho chuyên nghiệp, đỡ cringe hơn
+- Đoạn đầu tiên luôn là "Giới thiệu" đoạn cuối cùng luôn là đoạn có heading là "Kết luận"
+- Thay "công ty" thành "dự án" (nếu có)
+- Thay "chúng tôi" hoặc các ngôi thứ nhất thành "dự án"/"đội ngũ"
+- Đừng thêm từ "các bạn", hãy dùng "người dùng",...
+- Trừ các từ ngữ tiếng anh này thì giữ nguyên từ gốc, còn lại dịch sang tiếng việt cho người dùng crypto hiểu, nhấn mạnh là người dùng crypto (nghĩa là họ đủ hiểu cơ bản về crypto, đừng dịch quá trừu tượng): 
 
-Task 2: Article Restructuring
-After translating, format the entire content according to modern blog standards. Identify the main title (use H1 tag), and use H2 and H3 tags logically for subtitles to make the article easy to read with a clear structure.
+Blockchain, Private Key, Public Key, Seed Phrase, Staking, Yield Farming, Token vs Coin, Stablecoin, Market Cap, Gas Fee, Smart Contract, NFT (Non-Fungible Token), DAO (Decentralized Autonomous Organization), Airdrop, IDO / ICO / IEO, DeFi (Decentralized Finance), CeFi (Centralized Finance), TVL (Total Value Locked), DEX Aggregator, Slippage, Arbitrage, Bridge, Layer 1 / Layer 2, Cross-chain, Validator / Node, Consensus (PoW, PoS, Delegated PoS, …), Halving, Liquidity Mining, Impermanent Loss, Rug Pull, Whitelist, Mainnet / Testnet, Protocol, Governance Token
 
-Return the FINAL RESULT AS A COMPLETE ARTICLE in Vietnamese that has been formatted.
+- Bạn bây giờ là một chuyên gia viết báo, toàn quyền quyết định lượt bỏ những đoạn promotion không cần thiết khi viết báo về một dự án
 
-Here is the text:
+SAU KHI VIẾT XONG BÀI CHÍNH, hãy viết thêm 2 phần nữa ở cuối:
+
+**SAPO** (100 chữ - tóm tắt hấp dẫn của bài viết)
+
+**META DESCRIPTION** (100 chữ - mô tả ngắn gọn cho SEO)
+
+---
+
+ĐÂY LÀ NỘI DUNG CẦN DỊCH:
 
 {request.content}"""
         
