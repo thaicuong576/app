@@ -311,7 +311,7 @@ Protocol
 Governance Token
 - Bạn bây giờ là một chuyên gia viết báo, toàn quyền quyết định lượt bỏ những đoạn promotion không cần thiết khi viết báo về một dự án
 
-Sau khi viết xong, hãy viết giúp tôi 2 đoạn khác, gồm đoạn sapo và đoạn meta description, mỗi đoạn 100 chữ.
+Sau khi viết xong, hãy viết giúp tôi 2 đoạn khác, gồm đoạn sapo và đoạn meta description, mỗi đoạn 100 chữ. Đặt meta description ở đầu tiên, sau đó là sapo, rồi mới đến phần "Giới thiệu".
 
 Nội dung:
 {request.content}"""
