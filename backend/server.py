@@ -357,26 +357,14 @@ Dựa vào bài viết được cung cấp, hãy tạo một bài đăng cho cá
         user_message = UserMessage(text=prompt)
         response = await chat.send_message(user_message)
         
-        # Parse the response
+        # Store the Vietnamese social post as a single content piece
+        # The response is a ~100 word social media post following the structure:
+        # Title → Problem/Context → Insight → CTA
         social_content = {
-            'facebook': '',
-            'twitter': '',
-            'hashtags': ''
+            'facebook': response.strip(),
+            'twitter': '',  # Not used in Vietnamese format
+            'hashtags': ''  # Not used in Vietnamese format
         }
-        
-        # Simple parsing
-        parts = response.split('FACEBOOK:')
-        if len(parts) > 1:
-            remaining = parts[1]
-            twitter_parts = remaining.split('TWITTER:')
-            if len(twitter_parts) > 1:
-                social_content['facebook'] = twitter_parts[0].strip()
-                hashtag_parts = twitter_parts[1].split('HASHTAGS:')
-                if len(hashtag_parts) > 1:
-                    social_content['twitter'] = hashtag_parts[0].strip()
-                    social_content['hashtags'] = hashtag_parts[1].strip()
-                else:
-                    social_content['twitter'] = twitter_parts[1].strip()
         
         # Update database
         await db.projects.update_one(
