@@ -257,78 +257,53 @@ async def update_project(project_id: str, update: ProjectUpdate):
 
 @api_router.post("/projects/{project_id}/translate")
 async def translate_content(project_id: str, request: TranslateRequest):
-    """Translate and restructure content using Gemini"""
+    """Translate and restructure content using Gemini with specialized crypto/blockchain prompt"""
     try:
         # Initialize Gemini chat
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"translate_{project_id}",
-            system_message="Bạn là một Biên tập viên Content SEO chuyên nghiệp và giàu kinh nghiệm cho một trang tin tức công nghệ blockchain/crypto hàng đầu tại Việt Nam. Bạn cực kỳ giỏi trong việc biến một khối văn bản thô thành một bài viết blog hoàn chỉnh, có cấu trúc rõ ràng, dễ đọc, chuẩn SEO và sẵn sàng để đăng tải ngay lập tức."
+            system_message="Bạn là một Biên tập viên và Chuyên gia viết báo về lĩnh vực crypto tại Việt Nam. Nhiệm vụ của bạn là biến một bài viết gốc (tiếng Anh) thành một bài báo chuyên nghiệp, chuẩn văn phong Việt Nam và sẵn sàng để đăng tải."
         ).with_model("gemini", "gemini-2.5-pro")
         
-        # Create comprehensive prompt combining translation and restructuring
+        # Create the specialized prompt for crypto content
         prompt = f"""**BỐI CẢNH (CONTEXT):**
-Bạn là một Biên tập viên Content SEO chuyên nghiệp cho trang tin tức blockchain/crypto hàng đầu tại Việt Nam. Bạn giỏi trong việc dịch thuật và biến văn bản thô thành bài viết blog hoàn chỉnh, chuẩn SEO, sẵn sàng đăng ngay.
+Bạn là một Biên tập viên và Chuyên gia viết báo về lĩnh vực crypto tại Việt Nam. Nhiệm vụ của bạn là biến một bài viết gốc (tiếng Anh) thành một bài báo chuyên nghiệp, chuẩn văn phong Việt Nam và sẵn sàng để đăng tải.
 
-**NHIỆM VỤ (MISSION):**
-Dịch nội dung sang Tiếng Việt và định dạng thành bài blog hoàn chỉnh tuân thủ nghiêm ngặt các quy tắc dưới đây.
+**NHIỆM VỤ CHÍNH (MISSION):**
+Với nội dung tôi cung cấp, hãy thực hiện một chuỗi các nhiệm vụ sau một cách tuần tự và trả về một KẾT QUẢ DUY NHẤT.
 
-**QUY TẮC VÀNG (GOLDEN RULES):**
+**CÁC QUY TẮC BẮT BUỘC (MANDATORY RULES):**
 
-1. **TIÊU ĐỀ CHÍNH (H1):** 
-   - Phải có một và chỉ một tiêu đề H1 cho toàn bài
-   - Chỉ viết hoa chữ cái đầu tiên trong câu hoặc từ khóa quan trọng
-   - Viết lại cho chuyên nghiệp, đỡ cringe hơn
+1.  **DỊCH THUẬT & VĂN PHONG:**
+    *   Dịch toàn bộ nội dung sang Tiếng Việt.
+    *   Sử dụng văn phong báo chí chuyên nghiệp, khách quan, không quá quảng cáo (shill) cho dự án.
+    *   Toàn quyền lược bỏ những đoạn quảng cáo hoặc thông tin không cần thiết.
 
-2. **MỞ BÀI (GIỚI THIỆU):**
-   - Ngay sau H1, tạo section "Giới thiệu" (H2)
-   - Viết đoạn mở bài hấp dẫn 2-3 câu tóm tắt nội dung chính
+2.  **ĐỊNH DẠNG & CẤU TRÚC:**
+    *   Giữ nguyên cấu trúc các heading (tiêu đề phụ).
+    *   Đoạn đầu tiên LUÔN LUÔN có heading là "Giới thiệu".
+    *   Đoạn cuối cùng LUÔN LUÔN có heading là "Kết luận".
+    *   Tất cả Tiêu đề chính (Title) và tiêu đề phụ (Heading) chỉ được viết hoa chữ cái đầu tiên của câu (hoặc các từ khóa, tên riêng quan trọng). Tinh chỉnh câu chữ của heading cho chuyên nghiệp và tự nhiên hơn.
 
-3. **CẤU TRÚC LOGIC (H2 & H3):**
-   - Phân tích và chia nội dung thành các phần logic
-   - Mỗi phần bắt đầu bằng tiêu đề H2 rõ ràng, súc tích
-   - Dùng H3 cho các ý nhỏ hơn
-   - Heading chỉ viết hoa chữ cái đầu
+3.  **QUY TẮC NGÔN TỪ:**
+    *   Thay thế "công ty" bằng "dự án".
+    *   Thay thế các đại từ nhân xưng ngôi thứ nhất ("chúng tôi", "tôi", "we", "our") thành các danh từ ngôi thứ ba như "dự án", "đội ngũ".
+    *   Tránh dùng từ "các bạn", hãy sử dụng các từ thay thế trang trọng hơn như "người dùng", "cộng đồng", "nhà phát triển".
 
-4. **TÍNH DỄ ĐỌC (READABILITY):**
-   - Không để đoạn văn quá dài - tối đa 2-4 câu/đoạn
-   - Tự động ngắt "bức tường chữ"
-   - Sử dụng **in đậm** cho thuật ngữ quan trọng, khái niệm chính
-   - Dùng danh sách (bullet hoặc số) cho các bước, tính năng, luận điểm
+4.  **XỬ LÝ THUẬT NGỮ CRYPTO:**
+    *   **Giữ nguyên gốc** các thuật ngữ sau: Blockchain, Private Key, Public Key, Seed Phrase, Staking, Yield Farming, Token, Coin, Stablecoin, Market Cap, Gas Fee, Smart Contract, NFT, DAO, Airdrop, IDO, ICO, IEO, DeFi, CeFi, TVL, DEX Aggregator, Slippage, Arbitrage, Bridge, Layer 1, Layer 2, Cross-chain, Validator, Node, Consensus, PoW, PoS, Halving, Liquidity Mining, Impermanent Loss, Rug Pull, Whitelist, Mainnet, Testnet, Protocol, Governance Token.
+    *   Đối với các thuật ngữ crypto phức tạp khác không có trong danh sách trên, hãy **thêm bản dịch hoặc giải thích ngắn Tiếng Việt trong dấu ngoặc đơn**. Ví dụ: "zero-knowledge proofs (bằng chứng không kiến thức)".
 
-5. **KẾT LUẬN:**
-   - Luôn kết thúc bằng section "Kết luận" (H2)
-   - Tóm tắt những điểm chính
+5.  **YÊU CẦU ĐẦU RA (OUTPUT REQUIREMENT):**
+    *   **Phần 1 - Bài viết chính:** Toàn bộ nội dung bài viết phải được định dạng bằng **Markdown**.
+    *   **Phần 2 - Nội dung phụ:** Sau khi hoàn thành bài viết, hãy tạo thêm 2 đoạn sau và phân tách rõ ràng:
+        *   `[SAPO]`
+        *   Viết một đoạn sapo (mở bài) khoảng 100 chữ.
+        *   `[META]`
+        *   Viết một đoạn meta description (mô tả SEO) khoảng 100 chữ.
 
-6. **PHONG CÁCH VIẾT:**
-   - Phong cách báo VN, không quá shill dự án
-   - Giữ tone khách quan, chuyên nghiệp
-   - Thay "công ty" → "dự án"
-   - Thay "chúng tôi" → "dự án"/"đội ngũ"
-   - Thay "các bạn" → "người dùng"
-   - Toàn quyền loại bỏ nội dung promotion không cần thiết
-
-7. **THUẬT NGỮ CRYPTO:**
-   - GIỮ NGUYÊN các thuật ngữ này bằng tiếng Anh: Blockchain, Private Key, Public Key, Seed Phrase, Staking, Yield Farming, Token, Coin, Stablecoin, Market Cap, Gas Fee, Smart Contract, NFT, DAO, Airdrop, IDO, ICO, IEO, DeFi, CeFi, TVL, DEX, Aggregator, Slippage, Arbitrage, Bridge, Layer 1, Layer 2, Cross-chain, Validator, Node, Consensus, PoW, PoS, Halving, Liquidity Mining, Impermanent Loss, Rug Pull, Whitelist, Mainnet, Testnet, Protocol, Governance Token
-   - Thêm bản dịch tiếng Việt trong ngoặc đơn cho thuật ngữ khó hiểu
-   - Viết cho người dùng crypto có kiến thức cơ bản
-
-8. **ĐỊNH DẠNG OUTPUT:**
-   - Kết quả PHẢI là HTML thuần túy đã được định dạng
-   - KHÔNG thêm lời giải thích như "Chắc chắn rồi, đây là bài viết..."
-   - Chỉ trả về nội dung bài viết đã format
-
-9. **NỘI DUNG BỔ SUNG:**
-   Sau bài viết chính, thêm 2 phần:
-   
-   **SAPO** (100 chữ - tóm tắt hấp dẫn, in đậm "SAPO")
-   
-   **META DESCRIPTION** (100 chữ - mô tả SEO, in đậm "META DESCRIPTION")
-
----
-
-**VĂN BẢN CẦN XỬ LÝ:**
-
+**NỘI DUNG GỐC CẦN XỬ LÝ:**
 {request.content}"""
         
         user_message = UserMessage(text=prompt)
