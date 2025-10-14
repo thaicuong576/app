@@ -101,3 +101,144 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Xây dựng ứng dụng "Partner Content Hub" - một cỗ máy sản xuất nội dung tự động cho crypto/blockchain.
+  Nâng cấp hệ thống AI prompts với 2 preset chuyên biệt:
+  1. 🚀 Dịch và Tái cấu trúc: Dịch bài viết tiếng Anh sang tiếng Việt với văn phong báo chí crypto chuyên nghiệp
+  2. ✍️ Tạo Content Social: Tạo bài đăng social media ~100 từ với cấu trúc Tiêu đề → Dẫn dắt → Insight → CTA
+
+backend:
+  - task: "API endpoint để dịch và tái cấu trúc nội dung crypto"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã cập nhật endpoint /api/projects/{project_id}/translate với prompt mới:
+          - System message: Biên tập viên và Chuyên gia viết báo crypto
+          - Prompt chi tiết với 5 quy tắc bắt buộc
+          - Xử lý thuật ngữ crypto theo danh sách chuẩn
+          - Output: Markdown với SAPO và META description
+          - Sử dụng Gemini 2.5 Pro
+
+  - task: "API endpoint để tạo nội dung social media"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã cập nhật endpoint /api/projects/{project_id}/social với prompt tiếng Việt:
+          - System message: Community Manager cho kênh tin crypto
+          - Prompt yêu cầu bài đăng ~100 từ
+          - Cấu trúc: Tiêu đề → Dẫn dắt → Insight → CTA
+          - Tone khách quan, góc nhìn thứ ba
+          - Sử dụng Claude 4 Sonnet
+          - Response parser đã được đơn giản hóa (chỉ lưu vào facebook field)
+
+  - task: "Web scraping và download images từ URL"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Tính năng hiện có từ trước, không thay đổi"
+
+  - task: "CRUD operations cho projects"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Tính năng hiện có từ trước, không thay đổi"
+
+frontend:
+  - task: "Cập nhật button labels với emoji tiếng Việt"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã cập nhật:
+          - "Translate & Restructure" → "🚀 Dịch và Tái cấu trúc"
+          - "Generate Social Content" → "✍️ Tạo Content Social"
+          - Loading states: "Đang dịch...", "Đang tạo..."
+          - Modal title và descriptions sang tiếng Việt
+          - Social modal chỉ hiển thị 1 bài đăng (loại bỏ Twitter/Hashtags sections)
+
+  - task: "Dashboard và Project Management UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Tính năng hiện có từ trước, không thay đổi"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "API endpoint để dịch và tái cấu trúc nội dung crypto"
+    - "API endpoint để tạo nội dung social media"
+    - "Cập nhật button labels với emoji tiếng Việt"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Đã hoàn thành việc nâng cấp AI prompts theo yêu cầu:
+      
+      BACKEND CHANGES:
+      1. Translate endpoint: Đã thay thế prompt cũ bằng prompt chuyên biệt cho crypto/blockchain content
+         - Sử dụng Gemini 2.5 Pro
+         - Prompt tuân thủ 5 quy tắc: Dịch thuật & văn phong, Định dạng & cấu trúc, Quy tắc ngôn từ, Xử lý thuật ngữ crypto, Yêu cầu đầu ra
+         - Output: Markdown với [SAPO] và [META]
+      
+      2. Social endpoint: Đã thay thế prompt tiếng Anh bằng prompt tiếng Việt Community Manager
+         - Sử dụng Claude 4 Sonnet
+         - Output: Bài đăng ~100 từ theo cấu trúc 4 phần
+         - Response parser đã được cập nhật để lưu vào facebook field
+      
+      FRONTEND CHANGES:
+      1. Button labels đã cập nhật với emoji và tiếng Việt
+      2. Modal và UI elements đã Việt hóa
+      3. Social modal chỉ hiển thị 1 bài đăng thay vì 3 sections
+      
+      CẦN TESTING:
+      - Test translate endpoint với nội dung crypto tiếng Anh
+      - Test social endpoint với bài viết đã dịch
+      - Verify output format đúng yêu cầu (Markdown, SAPO, META cho translate; ~100 từ structured post cho social)
+      - Kiểm tra UI buttons và modal hiển thị đúng tiếng Việt
