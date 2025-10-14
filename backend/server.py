@@ -263,35 +263,71 @@ async def translate_content(project_id: str, request: TranslateRequest):
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"translate_{project_id}",
-            system_message="Bạn là chuyên gia viết báo crypto chuyên nghiệp, có nhiều năm kinh nghiệm viết về blockchain và cryptocurrency cho các tờ báo Việt Nam."
+            system_message="Bạn là một Biên tập viên Content SEO chuyên nghiệp và giàu kinh nghiệm cho một trang tin tức công nghệ blockchain/crypto hàng đầu tại Việt Nam. Bạn cực kỳ giỏi trong việc biến một khối văn bản thô thành một bài viết blog hoàn chỉnh, có cấu trúc rõ ràng, dễ đọc, chuẩn SEO và sẵn sàng để đăng tải ngay lập tức."
         ).with_model("gemini", "gemini-2.5-pro")
         
-        # Create translation prompt with custom preset
-        prompt = f"""Tôi yêu cầu bạn, nhiệm vụ chính là: 
+        # Create comprehensive prompt combining translation and restructuring
+        prompt = f"""**BỐI CẢNH (CONTEXT):**
+Bạn là một Biên tập viên Content SEO chuyên nghiệp cho trang tin tức blockchain/crypto hàng đầu tại Việt Nam. Bạn giỏi trong việc dịch thuật và biến văn bản thô thành bài viết blog hoàn chỉnh, chuẩn SEO, sẵn sàng đăng ngay.
 
-- Với mỗi nội dung tôi gửi bạn, đó là bài article, bạn hãy dịch sang tiếng việt và đổi phong cách viết thành cách viết của các bên báo VN, không quá shill dự án, giữ các thuật ngữ crypto nhé, và vẫn giữ format heading.
-- Các heading và title chỉ viết hoa chữ cái đầu tiên trong câu hoặc từ khoá quan trọng.
-- Để thêm các bản dịch tiếng Việt trong dấu ngoặc đơn cho tất cả các thuật ngữ crypto khó hiểu nhé
-- Các heading, đổi cách viết cho chuyên nghiệp, đỡ cringe hơn
-- Đoạn đầu tiên luôn là "Giới thiệu" đoạn cuối cùng luôn là đoạn có heading là "Kết luận"
-- Thay "công ty" thành "dự án" (nếu có)
-- Thay "chúng tôi" hoặc các ngôi thứ nhất thành "dự án"/"đội ngũ"
-- Đừng thêm từ "các bạn", hãy dùng "người dùng",...
-- Trừ các từ ngữ tiếng anh này thì giữ nguyên từ gốc, còn lại dịch sang tiếng việt cho người dùng crypto hiểu, nhấn mạnh là người dùng crypto (nghĩa là họ đủ hiểu cơ bản về crypto, đừng dịch quá trừu tượng): 
+**NHIỆM VỤ (MISSION):**
+Dịch nội dung sang Tiếng Việt và định dạng thành bài blog hoàn chỉnh tuân thủ nghiêm ngặt các quy tắc dưới đây.
 
-Blockchain, Private Key, Public Key, Seed Phrase, Staking, Yield Farming, Token vs Coin, Stablecoin, Market Cap, Gas Fee, Smart Contract, NFT (Non-Fungible Token), DAO (Decentralized Autonomous Organization), Airdrop, IDO / ICO / IEO, DeFi (Decentralized Finance), CeFi (Centralized Finance), TVL (Total Value Locked), DEX Aggregator, Slippage, Arbitrage, Bridge, Layer 1 / Layer 2, Cross-chain, Validator / Node, Consensus (PoW, PoS, Delegated PoS, …), Halving, Liquidity Mining, Impermanent Loss, Rug Pull, Whitelist, Mainnet / Testnet, Protocol, Governance Token
+**QUY TẮC VÀNG (GOLDEN RULES):**
 
-- Bạn bây giờ là một chuyên gia viết báo, toàn quyền quyết định lượt bỏ những đoạn promotion không cần thiết khi viết báo về một dự án
+1. **TIÊU ĐỀ CHÍNH (H1):** 
+   - Phải có một và chỉ một tiêu đề H1 cho toàn bài
+   - Chỉ viết hoa chữ cái đầu tiên trong câu hoặc từ khóa quan trọng
+   - Viết lại cho chuyên nghiệp, đỡ cringe hơn
 
-SAU KHI VIẾT XONG BÀI CHÍNH, hãy viết thêm 2 phần nữa ở cuối:
+2. **MỞ BÀI (GIỚI THIỆU):**
+   - Ngay sau H1, tạo section "Giới thiệu" (H2)
+   - Viết đoạn mở bài hấp dẫn 2-3 câu tóm tắt nội dung chính
 
-**SAPO** (100 chữ - tóm tắt hấp dẫn của bài viết)
+3. **CẤU TRÚC LOGIC (H2 & H3):**
+   - Phân tích và chia nội dung thành các phần logic
+   - Mỗi phần bắt đầu bằng tiêu đề H2 rõ ràng, súc tích
+   - Dùng H3 cho các ý nhỏ hơn
+   - Heading chỉ viết hoa chữ cái đầu
 
-**META DESCRIPTION** (100 chữ - mô tả ngắn gọn cho SEO)
+4. **TÍNH DỄ ĐỌC (READABILITY):**
+   - Không để đoạn văn quá dài - tối đa 2-4 câu/đoạn
+   - Tự động ngắt "bức tường chữ"
+   - Sử dụng **in đậm** cho thuật ngữ quan trọng, khái niệm chính
+   - Dùng danh sách (bullet hoặc số) cho các bước, tính năng, luận điểm
+
+5. **KẾT LUẬN:**
+   - Luôn kết thúc bằng section "Kết luận" (H2)
+   - Tóm tắt những điểm chính
+
+6. **PHONG CÁCH VIẾT:**
+   - Phong cách báo VN, không quá shill dự án
+   - Giữ tone khách quan, chuyên nghiệp
+   - Thay "công ty" → "dự án"
+   - Thay "chúng tôi" → "dự án"/"đội ngũ"
+   - Thay "các bạn" → "người dùng"
+   - Toàn quyền loại bỏ nội dung promotion không cần thiết
+
+7. **THUẬT NGỮ CRYPTO:**
+   - GIỮ NGUYÊN các thuật ngữ này bằng tiếng Anh: Blockchain, Private Key, Public Key, Seed Phrase, Staking, Yield Farming, Token, Coin, Stablecoin, Market Cap, Gas Fee, Smart Contract, NFT, DAO, Airdrop, IDO, ICO, IEO, DeFi, CeFi, TVL, DEX, Aggregator, Slippage, Arbitrage, Bridge, Layer 1, Layer 2, Cross-chain, Validator, Node, Consensus, PoW, PoS, Halving, Liquidity Mining, Impermanent Loss, Rug Pull, Whitelist, Mainnet, Testnet, Protocol, Governance Token
+   - Thêm bản dịch tiếng Việt trong ngoặc đơn cho thuật ngữ khó hiểu
+   - Viết cho người dùng crypto có kiến thức cơ bản
+
+8. **ĐỊNH DẠNG OUTPUT:**
+   - Kết quả PHẢI là HTML thuần túy đã được định dạng
+   - KHÔNG thêm lời giải thích như "Chắc chắn rồi, đây là bài viết..."
+   - Chỉ trả về nội dung bài viết đã format
+
+9. **NỘI DUNG BỔ SUNG:**
+   Sau bài viết chính, thêm 2 phần:
+   
+   **SAPO** (100 chữ - tóm tắt hấp dẫn, in đậm "SAPO")
+   
+   **META DESCRIPTION** (100 chữ - mô tả SEO, in đậm "META DESCRIPTION")
 
 ---
 
-ĐÂY LÀ NỘI DUNG CẦN DỊCH:
+**VĂN BẢN CẦN XỬ LÝ:**
 
 {request.content}"""
         
