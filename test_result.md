@@ -301,7 +301,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Cập nhật button labels với emoji tiếng Việt"
+    - "API endpoint để dịch và tái cấu trúc nội dung crypto"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
