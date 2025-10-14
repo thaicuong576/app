@@ -260,9 +260,9 @@ async def update_project(project_id: str, update: ProjectUpdate):
 async def translate_content(project_id: str, request: TranslateRequest):
     """Translate and restructure content using Gemini with user's preset prompt"""
     try:
-        # Initialize Gemini chat
+        # Initialize Gemini chat with Google API key
         chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
+            api_key=GOOGLE_API_KEY,
             session_id=f"translate_{project_id}",
             system_message="Bạn là một chuyên gia viết báo về crypto."
         ).with_model("gemini", "gemini-2.5-pro")
