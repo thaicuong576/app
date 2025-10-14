@@ -183,6 +183,14 @@ backend:
           - Content được lưu vào facebook field như thiết kế
           - Database update thành công
           - Prompt Community Manager tiếng Việt hoạt động chính xác
+      - working: true
+        agent: "main"
+        comment: |
+          ✏️ ĐÃ CẬP NHẬT PROMPT THEO YÊU CẦU USER - Thay thế bằng preset đơn giản hơn:
+          - Giữ nguyên câu từ của user preset
+          - Prompt phong cách casual hơn: "ok giờ đọc bài đó..."
+          - Vẫn giữ yêu cầu: ~100 từ, outline title→context→insight→CTA, không shill
+          - Cần test lại với prompt mới
 
   - task: "Web scraping và download images từ URL"
     implemented: true
