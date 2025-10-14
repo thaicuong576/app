@@ -28,8 +28,9 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# LLM API Key
+# LLM API Keys
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 
 # Create images directory
 IMAGES_DIR = ROOT_DIR / 'static' / 'images'
