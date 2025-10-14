@@ -414,7 +414,7 @@ const Workshop = () => {
                     variant="outline"
                     className="w-full h-10 rounded-lg"
                   >
-                    View Social Content
+                    Xem Nội dung Social
                   </Button>
                 )}
               </CardContent>
