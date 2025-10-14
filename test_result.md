@@ -115,7 +115,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -141,6 +141,14 @@ backend:
             ✓ Format Markdown chuẩn
           - Database update thành công
           - Prompt tiếng Việt hoạt động chính xác theo yêu cầu
+      - working: true
+        agent: "main"
+        comment: |
+          ✏️ ĐÃ CẬP NHẬT PROMPT THEO YÊU CẦU USER - Thay thế bằng preset đơn giản hơn:
+          - Giữ nguyên câu từ của user preset
+          - Prompt trực tiếp, dễ hiểu hơn
+          - Vẫn giữ tất cả yêu cầu: dịch VN, giữ thuật ngữ crypto, format heading, sapo/meta
+          - Cần test lại với prompt mới
 
   - task: "API endpoint để tạo nội dung social media"
     implemented: true
@@ -148,7 +156,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
