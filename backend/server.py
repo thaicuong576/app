@@ -328,37 +328,30 @@ Với nội dung tôi cung cấp, hãy thực hiện một chuỗi các nhiệm 
 
 @api_router.post("/projects/{project_id}/social")
 async def generate_social_content(project_id: str, request: SocialGenerateRequest):
-    """Generate social media content using Claude"""
+    """Generate social media content using Claude with Vietnamese Community Manager prompt"""
     try:
-        # Initialize Claude chat
+        # Initialize Claude chat with Vietnamese persona
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"social_{project_id}",
-            system_message="You are a social media marketing expert specializing in creating engaging content."
+            system_message="Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto. Nhiệm vụ của bạn là đọc một bài nghiên cứu chuyên sâu và viết một bài đăng ngắn gọn để thu hút cộng đồng đọc bài viết đầy đủ."
         ).with_model("anthropic", "claude-4-sonnet-20250514")
         
-        # Create social content prompt
-        prompt = f"""Based on this complete blog article, create short content to promote on social media:
+        # Create specialized Vietnamese social content prompt
+        prompt = f"""**BỐI CẢNH (CONTEXT):**
+Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto. Nhiệm vụ của bạn là đọc một bài nghiên cứu chuyên sâu và viết một bài đăng ngắn gọn để thu hút cộng đồng đọc bài viết đầy đủ.
 
-1. Facebook/LinkedIn Post: An engaging paragraph (3-4 sentences) summarizing the core value of the article and ending with a strong call to action.
+**NHIỆM VỤ (MISSION):**
+Dựa vào bài viết được cung cấp, hãy tạo một bài đăng cho các nền tảng mạng xã hội (như Telegram, Facebook) với độ dài khoảng 100 từ, tuân thủ nghiêm ngặt cấu trúc sau:
 
-2. Tweet: A single tweet line (under 280 characters) containing the most intriguing information.
+1.  **Tiêu đề:** Đặt một tiêu đề ngắn gọn, hấp dẫn.
+2.  **Dẫn dắt:** Mở đầu bằng cách nêu lên một vấn đề hoặc một bối cảnh chung của thị trường crypto hiện tại.
+3.  **Giới thiệu Insight:** Kết nối vấn đề đó với một insight (điểm sáng giá) cốt lõi có trong bài viết. Giới thiệu một cách khéo léo, không mang tính quảng cáo trực tiếp cho dự án được đề cập.
+4.  **Kết luận và CTA:** Kết thúc bằng một câu kêu gọi hành động (Call To Action), mời cộng đồng đọc bài viết đầy đủ trên trang GFI Research.
 
-3. Hashtags: Suggest 5 relevant and appropriate hashtags.
+**Lưu ý quan trọng:** Luôn viết với góc nhìn thứ ba, giữ thái độ khách quan và không shill dự án.
 
-Please format the response EXACTLY as follows:
-
-FACEBOOK:
-[Your Facebook/LinkedIn post here]
-
-TWITTER:
-[Your tweet here]
-
-HASHTAGS:
-[Your hashtags here]
-
-Here is the article:
-
+**BÀI VIẾT ĐỂ PHÂN TÍCH:**
 {request.content}"""
         
         user_message = UserMessage(text=prompt)
