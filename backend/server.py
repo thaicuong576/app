@@ -339,14 +339,14 @@ Nội dung:
 
 @api_router.post("/projects/{project_id}/social")
 async def generate_social_content(project_id: str, request: SocialGenerateRequest):
-    """Generate social media content using Claude with user's preset prompt"""
+    """Generate social media content using Gemini with user's preset prompt"""
     try:
-        # Initialize Claude chat
+        # Initialize Gemini chat with Google API key
         chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
+            api_key=GOOGLE_API_KEY,
             session_id=f"social_{project_id}",
             system_message="Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto."
-        ).with_model("anthropic", "claude-4-sonnet-20250514")
+        ).with_model("gemini", "gemini-2.0-flash-exp")
         
         # Use exact user preset prompt
         prompt = f"""ok giờ đọc bài đó và hãy viết bài post telegram ngắn cho tôi nhé, khoảng 100 từ thôi, theo outline sau: title dẫn dắt các vấn đề hiện tại của thị trường sau đó giới thiệu 1 phần nội dung có insight (ngắn, sao cho đừng quá shill Succinct) kết luận và CTA về bài GFI Research gốc
