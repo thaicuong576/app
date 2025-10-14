@@ -173,19 +173,19 @@ def test_translate_endpoint(project_id):
             else:
                 print_error("✗ Missing 'Kết luận' section")
             
-            # Check 4: Contains [SAPO] section
-            if "[SAPO]" in translated_content:
-                print_success("✓ Contains [SAPO] section")
+            # Check 4: Contains Meta description section (should appear first)
+            if "**Meta description**" in translated_content:
+                print_success("✓ Contains Meta description section")
                 checks_passed += 1
             else:
-                print_error("✗ Missing [SAPO] section")
+                print_error("✗ Missing Meta description section")
             
-            # Check 5: Contains [META] section
-            if "[META]" in translated_content:
-                print_success("✓ Contains [META] section")
+            # Check 5: Contains Sapo section (should appear after meta description)
+            if "**Sapo**" in translated_content:
+                print_success("✓ Contains Sapo section")
                 checks_passed += 1
             else:
-                print_error("✗ Missing [META] section")
+                print_error("✗ Missing Sapo section")
             
             # Check 6: Crypto terms preserved (check for some key terms)
             crypto_terms = ["Lightning Network", "Bitcoin", "blockchain", "smart contract"]
