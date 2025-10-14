@@ -257,53 +257,63 @@ async def update_project(project_id: str, update: ProjectUpdate):
 
 @api_router.post("/projects/{project_id}/translate")
 async def translate_content(project_id: str, request: TranslateRequest):
-    """Translate and restructure content using Gemini with specialized crypto/blockchain prompt"""
+    """Translate and restructure content using Gemini with user's preset prompt"""
     try:
         # Initialize Gemini chat
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"translate_{project_id}",
-            system_message="Bạn là một Biên tập viên và Chuyên gia viết báo về lĩnh vực crypto tại Việt Nam. Nhiệm vụ của bạn là biến một bài viết gốc (tiếng Anh) thành một bài báo chuyên nghiệp, chuẩn văn phong Việt Nam và sẵn sàng để đăng tải."
+            system_message="Bạn là một chuyên gia viết báo về crypto."
         ).with_model("gemini", "gemini-2.5-pro")
         
-        # Create the specialized prompt for crypto content
-        prompt = f"""**BỐI CẢNH (CONTEXT):**
-Bạn là một Biên tập viên và Chuyên gia viết báo về lĩnh vực crypto tại Việt Nam. Nhiệm vụ của bạn là biến một bài viết gốc (tiếng Anh) thành một bài báo chuyên nghiệp, chuẩn văn phong Việt Nam và sẵn sàng để đăng tải.
+        # Use exact user preset prompt
+        prompt = f"""Tôi yêu cầu bạn, nhiệm vụ chính là: 
+-Với mỗi nội dung tôi gửi bạn, đó là bài article, bạn hãy dịch sang tiếng việt và đổi phong cách viết thành cách viết của các bên báo VN, không quá shill dự án, giữ các thuật ngữ crypto nhé, và vẫn giữ format heading.
+- Các heading và title chỉ viết hoa chữ cái đầu tiên trong câu hoặc từ khoá quan trọng.
+- Để thêm các bản dịch tiếng Việt trong dấu ngoặc đơn cho tất cả các thuật ngữ crypto khó hiểu nhé
+- Các heading, đổi cách viết cho chuyên nghiệp, đỡ cringe hơn
+- Đoạn đầu tiên luôn là "Giới thiệu" đoạn cuối cùng luôn là đoạn có heading là "Kết luận"
+- Thay "công ty" thành "dự án" (nếu có)
+- Thay "chúng tôi" hoặc các ngôi thứ nhất thành "dự án"/"đội ngũ"
+- Đừng thêm từ "các bạn", hãy dùng "người dùng",...
+- Trừ các từ ngữ tiếng anh này thì giữ nguyên từ gốc, còn lại dịch sang tiếng việt cho người dùng crypto hiểu, nhấn mạnh là người dùng crypto (nghĩa là họ đủ hiểu cơ bản về crypto, đừng dịch quá trừu tượng): Blockchain
+Private Key / Public Key
+Seed Phrase
+Staking
+Yield Farming
+Token vs Coin
+Stablecoin
+Market Cap
+Gas Fee
+Smart Contract
+NFT (Non-Fungible Token)
+DAO (Decentralized Autonomous Organization)
+Airdrop
+IDO / ICO / IEO
+DeFi (Decentralized Finance)
+CeFi (Centralized Finance)
+TVL (Total Value Locked)
+DEX Aggregator
+Slippage
+Arbitrage
+Bridge
+Layer 1 / Layer 2
+Cross-chain
+Validator / Node
+Consensus (PoW, PoS, Delegated PoS, …)
+Halving
+Liquidity Mining
+Impermanent Loss
+Rug Pull
+Whitelist
+Mainnet / Testnet
+Protocol
+Governance Token
+- Bạn bây giờ là một chuyên gia viết báo, toàn quyền quyết định lượt bỏ những đoạn promotion không cần thiết khi viết báo về một dự án
 
-**NHIỆM VỤ CHÍNH (MISSION):**
-Với nội dung tôi cung cấp, hãy thực hiện một chuỗi các nhiệm vụ sau một cách tuần tự và trả về một KẾT QUẢ DUY NHẤT.
+Sau khi viết xong, hãy viết giúp tôi 2 đoạn khác, gồm đoạn sapo và đoạn meta description, mỗi đoạn 100 chữ.
 
-**CÁC QUY TẮC BẮT BUỘC (MANDATORY RULES):**
-
-1.  **DỊCH THUẬT & VĂN PHONG:**
-    *   Dịch toàn bộ nội dung sang Tiếng Việt.
-    *   Sử dụng văn phong báo chí chuyên nghiệp, khách quan, không quá quảng cáo (shill) cho dự án.
-    *   Toàn quyền lược bỏ những đoạn quảng cáo hoặc thông tin không cần thiết.
-
-2.  **ĐỊNH DẠNG & CẤU TRÚC:**
-    *   Giữ nguyên cấu trúc các heading (tiêu đề phụ).
-    *   Đoạn đầu tiên LUÔN LUÔN có heading là "Giới thiệu".
-    *   Đoạn cuối cùng LUÔN LUÔN có heading là "Kết luận".
-    *   Tất cả Tiêu đề chính (Title) và tiêu đề phụ (Heading) chỉ được viết hoa chữ cái đầu tiên của câu (hoặc các từ khóa, tên riêng quan trọng). Tinh chỉnh câu chữ của heading cho chuyên nghiệp và tự nhiên hơn.
-
-3.  **QUY TẮC NGÔN TỪ:**
-    *   Thay thế "công ty" bằng "dự án".
-    *   Thay thế các đại từ nhân xưng ngôi thứ nhất ("chúng tôi", "tôi", "we", "our") thành các danh từ ngôi thứ ba như "dự án", "đội ngũ".
-    *   Tránh dùng từ "các bạn", hãy sử dụng các từ thay thế trang trọng hơn như "người dùng", "cộng đồng", "nhà phát triển".
-
-4.  **XỬ LÝ THUẬT NGỮ CRYPTO:**
-    *   **Giữ nguyên gốc** các thuật ngữ sau: Blockchain, Private Key, Public Key, Seed Phrase, Staking, Yield Farming, Token, Coin, Stablecoin, Market Cap, Gas Fee, Smart Contract, NFT, DAO, Airdrop, IDO, ICO, IEO, DeFi, CeFi, TVL, DEX Aggregator, Slippage, Arbitrage, Bridge, Layer 1, Layer 2, Cross-chain, Validator, Node, Consensus, PoW, PoS, Halving, Liquidity Mining, Impermanent Loss, Rug Pull, Whitelist, Mainnet, Testnet, Protocol, Governance Token.
-    *   Đối với các thuật ngữ crypto phức tạp khác không có trong danh sách trên, hãy **thêm bản dịch hoặc giải thích ngắn Tiếng Việt trong dấu ngoặc đơn**. Ví dụ: "zero-knowledge proofs (bằng chứng không kiến thức)".
-
-5.  **YÊU CẦU ĐẦU RA (OUTPUT REQUIREMENT):**
-    *   **Phần 1 - Bài viết chính:** Toàn bộ nội dung bài viết phải được định dạng bằng **Markdown**.
-    *   **Phần 2 - Nội dung phụ:** Sau khi hoàn thành bài viết, hãy tạo thêm 2 đoạn sau và phân tách rõ ràng:
-        *   `[SAPO]`
-        *   Viết một đoạn sapo (mở bài) khoảng 100 chữ.
-        *   `[META]`
-        *   Viết một đoạn meta description (mô tả SEO) khoảng 100 chữ.
-
-**NỘI DUNG GỐC CẦN XỬ LÝ:**
+Nội dung:
 {request.content}"""
         
         user_message = UserMessage(text=prompt)
