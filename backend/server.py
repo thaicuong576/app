@@ -267,7 +267,7 @@ async def translate_content(project_id: str, request: TranslateRequest):
             system_message="Bạn là một chuyên gia viết báo về crypto."
         ).with_model("gemini", "gemini-2.5-pro")
         
-        # Use exact user preset prompt
+        # Use exact user preset prompt with HTML format requirement
         prompt = f"""Tôi yêu cầu bạn, nhiệm vụ chính là: 
 -Với mỗi nội dung tôi gửi bạn, đó là bài article, bạn hãy dịch sang tiếng việt và đổi phong cách viết thành cách viết của các bên báo VN, không quá shill dự án, giữ các thuật ngữ crypto nhé, và vẫn giữ format heading.
 - Các heading và title chỉ viết hoa chữ cái đầu tiên trong câu hoặc từ khoá quan trọng.
@@ -311,6 +311,16 @@ Mainnet / Testnet
 Protocol
 Governance Token
 - Bạn bây giờ là một chuyên gia viết báo, toàn quyền quyết định lượt bỏ những đoạn promotion không cần thiết khi viết báo về một dự án
+
+QUAN TRỌNG - FORMAT OUTPUT:
+- Trả về HTML format để dễ copy-paste vào Word/CMS
+- Meta description: Dùng <p><strong>Meta description:</strong> nội dung...</p>
+- Sapo: Dùng <p><strong>Sapo:</strong> nội dung...</p>
+- Heading cao nhất là <h2> (KHÔNG dùng h1)
+- Sub-heading dùng <h3>
+- Đoạn văn dùng <p>
+- Không thêm lời giải thích như "Chắc chắn rồi..." - chỉ trả về HTML thuần túy
+- Cấu trúc: Meta description → Sapo → <h2>Giới thiệu</h2> → nội dung → <h2>Kết luận</h2>
 
 Sau khi viết xong, hãy viết giúp tôi 2 đoạn khác, gồm đoạn sapo và đoạn meta description, mỗi đoạn 100 chữ. Đặt meta description ở đầu tiên, sau đó là sapo, rồi mới đến phần "Giới thiệu".
 
