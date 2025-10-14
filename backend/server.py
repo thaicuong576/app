@@ -338,30 +338,20 @@ Nội dung:
 
 @api_router.post("/projects/{project_id}/social")
 async def generate_social_content(project_id: str, request: SocialGenerateRequest):
-    """Generate social media content using Claude with Vietnamese Community Manager prompt"""
+    """Generate social media content using Claude with user's preset prompt"""
     try:
-        # Initialize Claude chat with Vietnamese persona
+        # Initialize Claude chat
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"social_{project_id}",
-            system_message="Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto. Nhiệm vụ của bạn là đọc một bài nghiên cứu chuyên sâu và viết một bài đăng ngắn gọn để thu hút cộng đồng đọc bài viết đầy đủ."
+            system_message="Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto."
         ).with_model("anthropic", "claude-4-sonnet-20250514")
         
-        # Create specialized Vietnamese social content prompt
-        prompt = f"""**BỐI CẢNH (CONTEXT):**
-Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto. Nhiệm vụ của bạn là đọc một bài nghiên cứu chuyên sâu và viết một bài đăng ngắn gọn để thu hút cộng đồng đọc bài viết đầy đủ.
+        # Use exact user preset prompt
+        prompt = f"""ok giờ đọc bài đó và hãy viết bài post telegram ngắn cho tôi nhé, khoảng 100 từ thôi, theo outline sau: title dẫn dắt các vấn đề hiện tại của thị trường sau đó giới thiệu 1 phần nội dung có insight (ngắn, sao cho đừng quá shill Succinct) kết luận và CTA về bài GFI Research gốc
+Lưu ý: Viết với góc nhìn thứ ba, không shill dự án
 
-**NHIỆM VỤ (MISSION):**
-Dựa vào bài viết được cung cấp, hãy tạo một bài đăng cho các nền tảng mạng xã hội (như Telegram, Facebook) với độ dài khoảng 100 từ, tuân thủ nghiêm ngặt cấu trúc sau:
-
-1.  **Tiêu đề:** Đặt một tiêu đề ngắn gọn, hấp dẫn.
-2.  **Dẫn dắt:** Mở đầu bằng cách nêu lên một vấn đề hoặc một bối cảnh chung của thị trường crypto hiện tại.
-3.  **Giới thiệu Insight:** Kết nối vấn đề đó với một insight (điểm sáng giá) cốt lõi có trong bài viết. Giới thiệu một cách khéo léo, không mang tính quảng cáo trực tiếp cho dự án được đề cập.
-4.  **Kết luận và CTA:** Kết thúc bằng một câu kêu gọi hành động (Call To Action), mời cộng đồng đọc bài viết đầy đủ trên trang GFI Research.
-
-**Lưu ý quan trọng:** Luôn viết với góc nhìn thứ ba, giữ thái độ khách quan và không shill dự án.
-
-**BÀI VIẾT ĐỂ PHÂN TÍCH:**
+Bài viết:
 {request.content}"""
         
         user_message = UserMessage(text=prompt)
