@@ -73,6 +73,7 @@ class ProjectUpdate(BaseModel):
 
 class TranslateRequest(BaseModel):
     content: str
+    custom_preset: str = ""
 
 class SocialGenerateRequest(BaseModel):
     content: str
