@@ -369,14 +369,14 @@ const Workshop = () => {
               <CardTitle className="flex items-center justify-between">
                 <span>Content Editor</span>
                 <Button
-                  data-testid="copy-html-btn"
-                  onClick={handleCopyHTML}
+                  data-testid="copy-content-btn"
+                  onClick={handleCopyContent}
                   variant="outline"
                   size="sm"
                   className="rounded-full"
                 >
                   <Copy className="h-4 w-4 mr-1" />
-                  Copy HTML
+                  Copy Content
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -397,6 +397,23 @@ const Workshop = () => {
                 <CardDescription>Transform your content with AI</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Custom Preset Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="customPreset" className="text-sm font-semibold text-slate-700">
+                    Custom Preset (Optional)
+                  </Label>
+                  <Textarea
+                    id="customPreset"
+                    placeholder="Add custom instructions to combine with the default preset..."
+                    value={customPreset}
+                    onChange={(e) => setCustomPreset(e.target.value)}
+                    className="min-h-[100px] text-sm"
+                  />
+                  <p className="text-xs text-slate-500">
+                    These instructions will be combined with the default translation preset
+                  </p>
+                </div>
+
                 <Button
                   data-testid="translate-btn"
                   onClick={handleTranslate}
