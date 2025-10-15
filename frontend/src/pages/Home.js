@@ -1,10 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Newspaper, Users, Globe, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 
 const Home = () => {
   const navigate = useNavigate();
+  
+  const handleNavigation = (path) => {
+    console.log('Navigating to:', path);
+    navigate(path);
+  };
 
   const features = [
     {
