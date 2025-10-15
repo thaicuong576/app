@@ -257,6 +257,7 @@ const Workshop = () => {
   const [generatingSocial, setGeneratingSocial] = useState(false);
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [socialContent, setSocialContent] = useState(null);
+  const [customPreset, setCustomPreset] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -281,7 +282,8 @@ const Workshop = () => {
     setTranslating(true);
     try {
       const response = await axios.post(`${API}/projects/${projectId}/translate`, {
-        content: project.original_content
+        content: project.original_content,
+        custom_preset: customPreset
       });
       setContent(response.data.translated_content);
       toast.success('Translation completed!');
@@ -310,14 +312,22 @@ const Workshop = () => {
     }
   };
 
-  const handleCopyHTML = () => {
-    navigator.clipboard.writeText(content);
-    toast.success('HTML copied to clipboard!');
+  const handleCopyContent = () => {
+    // Create a temporary element to parse HTML and get formatted text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    
+    // Get the formatted text with line breaks preserved
+    const formattedText = tempDiv.innerText || tempDiv.textContent;
+    
+    navigator.clipboard.writeText(formattedText);
+    toast.success('Content copied to clipboard!');
   };
 
   const handleCopyText = (text, label) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copied!`);
+  };
   };
 
   if (loading) {
