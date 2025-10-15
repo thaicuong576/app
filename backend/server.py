@@ -257,6 +257,16 @@ async def update_project(project_id: str, update: ProjectUpdate):
     
     return await get_project(project_id)
 
+@api_router.delete("/projects/{project_id}")
+async def delete_project(project_id: str):
+    """Delete a project"""
+    result = await db.projects.delete_one({"id": project_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    return {"message": "Project deleted successfully", "id": project_id}
+
 @api_router.post("/projects/{project_id}/translate")
 async def translate_content(project_id: str, request: TranslateRequest):
     """Translate and restructure content using Gemini with user's preset prompt"""
