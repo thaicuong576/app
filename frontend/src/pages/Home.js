@@ -63,10 +63,18 @@ const Home = () => {
             return (
               <div
                 key={feature.id}
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 overflow-hidden bg-white rounded-lg"
-                onClick={() => {
-                  console.log('Navigating to:', feature.path);
-                  navigate(feature.path);
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 overflow-hidden bg-white rounded-lg relative"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleNavigation(feature.path);
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleNavigation(feature.path);
+                  }
                 }}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none`} />
