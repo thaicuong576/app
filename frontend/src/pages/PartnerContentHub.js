@@ -328,7 +328,6 @@ const Workshop = () => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copied!`);
   };
-  };
 
   if (loading) {
     return (
