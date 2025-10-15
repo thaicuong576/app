@@ -57,13 +57,16 @@ const Home = () => {
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <Card
+              <div
                 key={feature.id}
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 overflow-hidden"
-                onClick={() => navigate(feature.path)}
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 overflow-hidden bg-white rounded-lg"
+                onClick={() => {
+                  console.log('Navigating to:', feature.path);
+                  navigate(feature.path);
+                }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                <CardContent className="p-8 relative">
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none`} />
+                <div className="p-8 relative">
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} shadow-lg`}>
                       <Icon className="h-8 w-8 text-white" />
@@ -76,8 +79,8 @@ const Home = () => {
                   <p className="text-gray-600 leading-relaxed">
                     {feature.description}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
