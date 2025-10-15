@@ -268,6 +268,11 @@ async def translate_content(project_id: str, request: TranslateRequest):
             system_message="Bạn là một chuyên gia viết báo về crypto."
         ).with_model("gemini", "gemini-2.5-pro")
         
+        # Build custom preset addition if provided
+        custom_instructions = ""
+        if request.custom_preset:
+            custom_instructions = f"\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n{request.custom_preset}\n"
+        
         # Use exact user preset prompt with HTML format requirement
         prompt = f"""Tôi yêu cầu bạn, nhiệm vụ chính là: 
 -Với mỗi nội dung tôi gửi bạn, đó là bài article, bạn hãy dịch sang tiếng việt và đổi phong cách viết thành cách viết của các bên báo VN, không quá shill dự án, giữ các thuật ngữ crypto nhé, và vẫn giữ format heading.
@@ -312,18 +317,33 @@ Mainnet / Testnet
 Protocol
 Governance Token
 - Bạn bây giờ là một chuyên gia viết báo, toàn quyền quyết định lượt bỏ những đoạn promotion không cần thiết khi viết báo về một dự án
-
+{custom_instructions}
 QUAN TRỌNG - FORMAT OUTPUT:
-- Trả về HTML format để dễ copy-paste vào Word/CMS
-- Meta description: Dùng <p><strong>Meta description:</strong> nội dung...</p>
-- Sapo: Dùng <p><strong>Sapo:</strong> nội dung...</p>
-- Heading cao nhất là <h2> (KHÔNG dùng h1)
+- Trả về HTML format với cấu trúc CHỈ 3 PHẦN:
+
+1. TITLE (Tiêu đề bài viết):
+<h1>Tiêu đề bài viết tiếng Việt</h1>
+
+2. META DESCRIPTION (Tối đa 2-3 lần độ dài của title):
+<div class="meta-description">
+<p>Meta description ngắn gọn, chỉ 2-3 câu, tối đa 2-3 lần độ dài của tiêu đề</p>
+</div>
+
+3. MAIN CONTENT (Bao gồm Sapo và toàn bộ nội dung còn lại):
+<div class="main-content">
+<p><strong>Sapo:</strong> Đoạn sapo khoảng 100 từ</p>
+<h2>Giới thiệu</h2>
+<p>Nội dung giới thiệu...</p>
+... (các section khác)
+<h2>Kết luận</h2>
+<p>Nội dung kết luận...</p>
+</div>
+
+- Heading cao nhất trong main content là <h2> (KHÔNG dùng h1, đã dùng cho title)
 - Sub-heading dùng <h3>
 - Đoạn văn dùng <p>
 - Không thêm lời giải thích như "Chắc chắn rồi..." - chỉ trả về HTML thuần túy
-- Cấu trúc: Meta description → Sapo → <h2>Giới thiệu</h2> → nội dung → <h2>Kết luận</h2>
-
-Sau khi viết xong, hãy viết giúp tôi 2 đoạn khác, gồm đoạn sapo và đoạn meta description, mỗi đoạn 100 chữ. Đặt meta description ở đầu tiên, sau đó là sapo, rồi mới đến phần "Giới thiệu".
+- Meta description phải NGẮN GỌN, chỉ 2-3 lần độ dài của title
 
 Nội dung:
 {request.content}"""
