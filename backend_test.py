@@ -754,7 +754,7 @@ def test_delete_partner_content_project(project_id):
 
 def main():
     """Run all backend tests"""
-    print("🚀 Partner Content Hub - Backend API Testing")
+    print("🚀 Partner Content Hub & KOL Post - Backend API Testing")
     print(f"Testing against: {BASE_URL}")
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -764,7 +764,13 @@ def main():
         'project_creation': False,
         'translation': False,
         'social_generation': False,
-        'project_retrieval': False
+        'project_retrieval': False,
+        'kol_post_text_generation': False,
+        'kol_post_url_generation': False,
+        'get_all_kol_posts': False,
+        'get_single_kol_post': False,
+        'delete_kol_post': False,
+        'delete_partner_project': False
     }
     
     # Test 1: API Health Check
@@ -793,16 +799,60 @@ def main():
     # Test 5: Project Retrieval
     test_results['project_retrieval'] = test_project_retrieval(project_id)
     
+    # KOL POST TESTS
+    print_test_header("KOL POST FEATURE TESTING")
+    
+    # Test 6: KOL Post Generation with Text Input
+    kol_post_id = test_kol_post_generation_text()
+    test_results['kol_post_text_generation'] = kol_post_id is not None
+    
+    # Test 7: KOL Post Generation with URL Input
+    kol_post_url_id = test_kol_post_generation_url()
+    test_results['kol_post_url_generation'] = kol_post_url_id is not None and kol_post_url_id != "url_failed"
+    
+    # Test 8: Get All KOL Posts
+    first_post_id = test_get_all_kol_posts()
+    test_results['get_all_kol_posts'] = first_post_id is not None
+    
+    # Use the first available post ID for single post and delete tests
+    test_post_id = kol_post_id or first_post_id
+    
+    # Test 9: Get Single KOL Post
+    test_results['get_single_kol_post'] = test_get_single_kol_post(test_post_id)
+    
+    # Test 10: Delete KOL Post
+    test_results['delete_kol_post'] = test_delete_kol_post(test_post_id)
+    
+    # Test 11: Delete Partner Content Hub Project
+    test_results['delete_partner_project'] = test_delete_partner_content_project(project_id)
+    
     # Summary
     print_test_header("TEST SUMMARY")
     passed_tests = sum(test_results.values())
     total_tests = len(test_results)
     
-    for test_name, result in test_results.items():
+    print("PARTNER CONTENT HUB TESTS:")
+    partner_tests = ['api_health', 'project_creation', 'translation', 'social_generation', 'project_retrieval', 'delete_partner_project']
+    for test_name in partner_tests:
+        result = test_results[test_name]
         status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{test_name.replace('_', ' ').title()}: {status}")
+        print(f"  {test_name.replace('_', ' ').title()}: {status}")
+    
+    print("\nKOL POST TESTS:")
+    kol_tests = ['kol_post_text_generation', 'kol_post_url_generation', 'get_all_kol_posts', 'get_single_kol_post', 'delete_kol_post']
+    for test_name in kol_tests:
+        result = test_results[test_name]
+        status = "✅ PASS" if result else "❌ FAIL"
+        print(f"  {test_name.replace('_', ' ').title()}: {status}")
     
     print(f"\nOverall Result: {passed_tests}/{total_tests} tests passed")
+    
+    # Detailed analysis
+    partner_passed = sum(test_results[test] for test in partner_tests)
+    kol_passed = sum(test_results[test] for test in kol_tests)
+    
+    print(f"Partner Content Hub: {partner_passed}/{len(partner_tests)} tests passed")
+    print(f"KOL Post Feature: {kol_passed}/{len(kol_tests)} tests passed")
     
     if passed_tests == total_tests:
         print_success("🎉 All tests passed! Backend APIs are working correctly.")
