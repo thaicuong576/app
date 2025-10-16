@@ -441,9 +441,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "KOL Post Feature - Backend API"
     - "KOL Post Feature - Frontend UI"
-    - "Delete functionality cho Partner Content Hub"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
