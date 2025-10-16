@@ -262,6 +262,25 @@ backend:
         agent: "main"
         comment: "Tính năng hiện có từ trước, không thay đổi"
 
+  - task: "KOL Post API endpoints - CRUD operations"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã implement KOL Post CRUD operations:
+          - POST /api/kol-posts/generate - Generate bài viết với AI
+          - GET /api/kol-posts - Lấy tất cả bài viết
+          - GET /api/kol-posts/{id} - Lấy 1 bài viết
+          - DELETE /api/kol-posts/{id} - Xóa bài viết
+          - URL scraping với BeautifulSoup để lấy title và main content
+          - Lưu vào MongoDB collection: kol_posts
+
 frontend:
   - task: "Cập nhật button labels với emoji tiếng Việt"
     implemented: true
