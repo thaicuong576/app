@@ -445,6 +445,201 @@ Bài viết:
         logging.error(f"Social content generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Social content generation failed: {str(e)}")
 
+# KOL Post endpoints
+@api_router.post("/kol-posts", response_model=KOLPost)
+async def create_kol_post(post_data: KOLPostCreate):
+    """Create a new KOL post without generating content"""
+    post = KOLPost(**post_data.dict())
+    await db.kol_posts.insert_one(post.dict())
+    return post
+
+@api_router.get("/kol-posts", response_model=List[KOLPost])
+async def get_kol_posts():
+    """Get all KOL posts"""
+    posts = await db.kol_posts.find().sort("created_at", -1).to_list(100)
+    return posts
+
+@api_router.get("/kol-posts/{post_id}", response_model=KOLPost)
+async def get_kol_post(post_id: str):
+    """Get a specific KOL post"""
+    post = await db.kol_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="KOL post not found")
+    return post
+
+@api_router.delete("/kol-posts/{post_id}")
+async def delete_kol_post(post_id: str):
+    """Delete a KOL post"""
+    result = await db.kol_posts.delete_one({"id": post_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="KOL post not found")
+    return {"message": "KOL post deleted successfully"}
+
+@api_router.post("/kol-posts/generate")
+async def generate_kol_post(request: KOLPostGenerate):
+    """Generate KOL post content using AI"""
+    try:
+        # Get information content
+        information_content = request.information_source
+        
+        # If source is URL, scrape the content
+        if request.source_type == "url":
+            try:
+                response = requests.get(request.information_source, timeout=15, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                })
+                response.raise_for_status()
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Remove script and style elements
+                for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
+                    script.decompose()
+                
+                # Get title
+                title = soup.find('title')
+                title_text = title.get_text().strip() if title else ""
+                
+                # Get main content
+                main_content = ""
+                # Try to find main content areas
+                content_areas = soup.find_all(['article', 'main', 'div'], class_=lambda x: x and any(c in str(x).lower() for c in ['content', 'article', 'post', 'entry']))
+                if content_areas:
+                    main_content = ' '.join([area.get_text(separator=' ', strip=True) for area in content_areas])
+                else:
+                    # Fallback to all paragraph text
+                    paragraphs = soup.find_all('p')
+                    main_content = ' '.join([p.get_text(separator=' ', strip=True) for p in paragraphs])
+                
+                information_content = f"Tiêu đề: {title_text}\n\nNội dung:\n{main_content}"
+                
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Không thể cào nội dung từ URL: {str(e)}")
+        
+        # DQ Writing Style from PDF - Complete examples
+        writing_style_examples = """
+Bài 1:
+Upbit trước delist hết mấy coin privacy như $XMR, $ZEC vì lý do tuân thủ.
+Nhưng giờ lại list $PROVE, cũng là token liên quan đến privacy, nhưng không bị xem là dạng private currency
+Có thể do nó thuộc dạng hạ tầng ZK, dùng cho xác minh và mở rộng mạng lưới chứ không phục vụ ẩn danh giao dịch.
+Không biết trong tương lai có open ra để list lại mấy thằng privacy không, vì lquan đến rửa tiền thì cũng căng.
+Không ai muốn liên đới cả
+
+Bài 2:
+Đệt trước có tia được em này mà chờ lâu nóng đít nên thu hồi về dca coin top
+Nào ngờ nó chờ mình bán xong là nó x8
+Cay dé vậy ta kkk $ZKWASM
+Thôi tìm gem khác vậy, alpha tụi nó hay đẩy láo lắm ae
+
+Bài 3:
+Bài viết này dành cho ae hay sợ ma voi quỷ mập trên Hyperliquid
+Dạo này thấy các bác follow ví "insider nhà Trump" nhiều và hễ cứ thấy nó sọc $BTC thì sợ toán loạn lên, vì đa phần ae hold hàng nhưng toàn mang tâm lí trade, âm 5 - 10% là đã thấy chột dạ.
+Thằng này nó short $BTC volume lớn, lại còn lù lù trên Hyper, ae track ra được nó, đăng social tùm lum cả trong và ngoài nước, không lẽ nó không biết
+Yên vị giùm t cái, cuối mùa rồi đừng có tối ưu nữa, cú sập này kill hết bẩy rồi, mục đích là để ae rén tay không dám bẩy nữa, từ đó đẩy là chốt lời quy mô lớn hơn vì thanh khoản đó từ ae mới là thanh khoản thật.
+That's it, $ETH szn incoming
+
+Bài 5:
+Quả $SNX x2 sau 2 tuần, x4 từ đáy. Múc theo Dương Quá thì Quá gì ạ, Quá đã
+GM đầu tuần cả nhà, đúng plan thì mình làm thôi, kệ mẹ cú sập luôn
+Sau đợt liquidate full market thì $SNX vẫn là 1 trong những còn hàng chịu ảnh hưởng ít nhất, sập xong thực tế chỉ lõm 10% so với entry của Dương.
+Và cũng may mắn nhờ cú sập nên kịp thó 1 lệnh DCA vào, đúng vùng 0.9 luôn vì 4h sáng hôm đó thì Dương chưa dậy =))
+Thành quả cho những chuỗi ngày sideway, x2 chốt gốc là đẹp. AE vào con hàng này cùng Dương thì có thể chốt gốc nhé, còn lại để market tự xử lí, #Ethereum Eco bắt đầu chạy, uptrend tới rồi ae ơi
+
+Bài 7:
+KINH KHỦNG: Sống đủ lâu để thấy con số 20 tỷ dô bị thanh lý
+Trừ $BTC, $ETH còn đỡ tí, tất cả altcoin nát gáo, chia buồn với ae long đòn bẩy, chỉ cần 2x là cháy hết, không còn giọt máu nào luôn.
+Điều cần làm hiện tại là bình tĩnh, chờ tạo đáy đã, Trung Quốc chưa đáp trả, còn hành tiếp đó ae ạ
+
+Bài 9:
+GM AE, con hàng $SNX vẫn cứng phết
+Chart vẫn còn sideway và vẫn không lủng được entry của Dương, nay được mùa coin cũ nó đẩy lên +20% ngon lành luôn ae ạ
+Ae nào trade lướt thì chốt vừa mồm đợi entry mới cũng được vì $BTC đang khá dập dìu.
+Còn Dương thì hold chặt, sẽ vào thêm và target cao hơn, vẫn bet vào perp dex hệ Ethereum này
+
+Bài 11:
+Thấy chưa ae, nổ súng rồi đó. Giá này còn rẻ chán
+Cứ chill chill ôm mấy em chất lượng thôi không cần làm gì nhiều ae ạ
+$PLUME on the top, up only (ko đùa)
+P/s: Sẽ nói rõ về tin này sau, nhưng bùng lổ vl đó ae
+
+Bài 14:
+Uptrend tới, các dự án bắt đầu ngáo giá
+Anh em cẩn thận, mới hôm qua có $FF làm mẫu rồi đó, chia gần 10 từ đỉnh dù mới TGE...1 ngày.
+Đánh giá kỹ dự án, đừng để bị slow rug như năm ngoái nha ae
+Nói chung tốt nhất mới list thì đừng đụng tay vào
+
+Bài 16:
+Nếu ae miss cả $ASTER, $AVNT, $APEX thì có thể múc $SNX, entry now. Lý do:
+@synthetix_io là dự án mùa cũ, mùa này sẽ có động lực đẩy để chốt sổ, còn làm dự án khác mùa sau
+Chuyển sang bú Ethereum theo trend perp dex, với trading prize pool $1M
+Chart đã confirm breakout với volume mạnh + vượt đỉnh, mốc cản gần nhất thì chỉ là trendline giảm quanh 1.8, nhưng các đỉnh trước đó là mấy năm về trước rồi.
+Kỳ vọng $ETH pump mạnh vào Q4 năm nay
+Một trong những cái thiếu là một người dẫn sóng, tuy nhiên nếu rõ ràng rồi thì không còn entry đẹp nữa.
+Target gần nhất 1.8, về tầm 0.9 dca thêm đoạn nữa, stop loss là khi $ETH bắt đầu có dấu hiệu rụng trong Q4 này.
+
+Bài 17:
+Volume thanh lý $ETH những tháng qua bao giờ cũng cao nhất thị trường.
+MM hay thật, nào ra phố wall, nào lên ETF gom, dụ cho bullish, max long, xong quét là ấm cả làng
+Nói vậy thôi chứ quét xong xuôi -> chuẩn bị đà tăng mới
+Hold spot vẫn tín nha các bác, dưới 4k, tầm 3k6 -> 3k8 là vùng giá đẹp để quăng thêm 1 2 chiếc dép lên thuyền chờ Up to bờ đến.
+"""
+        
+        # System message for KOL writing style
+        system_message = f"""Bạn là một KOL crypto có phong cách viết đặc trưng. Học phong cách viết này:
+
+{writing_style_examples}
+
+PHONG CÁCH VIẾT CỦA BẠN:
+- Tone casual, thân mật với độc giả (dùng "ae", "mình", "t", "m")
+- Nhận xét ngắn gọn, không giải thích dài dòng
+- Dùng tiếng lóng crypto và tiếng Việt tự nhiên
+- Đi thẳng vào vấn đề, không lan man
+- Dùng cảm thán vừa phải, không lạm dụng
+- Giữ ticker crypto với $ (ví dụ: $BTC, $ETH)
+- Có thể dùng emoji nhẹ nhàng
+- Viết theo kiểu tâm sự, chia sẻ quan điểm cá nhân
+
+QUAN TRỌNG:
+- Nhận định phải NGẮN GỌN, đúng trọng tâm
+- KHÔNG giải thích tá lả
+- KHÔNG lạm dụng cảm thán
+- Giữ phong cách tự nhiên như đang chat với bạn bè"""
+
+        # Initialize Gemini chat
+        chat = LlmChat(
+            api_key=GOOGLE_API_KEY,
+            session_id=f"kol_post_{uuid.uuid4().hex[:8]}",
+            system_message=system_message
+        ).with_model("gemini", "gemini-2.5-pro")
+        
+        # Create user message
+        user_message = UserMessage(f"""Đây là thông tin cần học:
+
+{information_content}
+
+Đây là nhận định cần có (viết ngắn gọn theo nhận định này):
+{request.insight_required}
+
+Hãy viết 1 bài post theo phong cách của bạn, kết hợp thông tin trên và nhận định đã cho. Nhớ: nhận định ngắn gọn, không giải thích dài dòng.""")
+        
+        # Generate content
+        response = await chat.send_message(user_message)
+        
+        # Create and save KOL post
+        kol_post = KOLPost(
+            information_source=request.information_source,
+            insight_required=request.insight_required,
+            generated_content=response.strip(),
+            source_type=request.source_type
+        )
+        
+        await db.kol_posts.insert_one(kol_post.dict())
+        
+        return kol_post
+    
+    except Exception as e:
+        logging.error(f"KOL post generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"KOL post generation failed: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
