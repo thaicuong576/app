@@ -329,6 +329,21 @@ const Workshop = () => {
     toast.success(`${label} copied!`);
   };
 
+  const handleDeleteProject = async () => {
+    if (!window.confirm('Bạn có chắc muốn xóa project này không?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/projects/${projectId}`);
+      toast.success('Project đã được xóa');
+      navigate('/partner-content-hub');
+    } catch (error) {
+      console.error('Delete project error:', error);
+      toast.error('Không thể xóa project');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
