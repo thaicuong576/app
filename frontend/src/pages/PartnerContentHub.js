@@ -355,14 +355,25 @@ const Workshop = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-8 max-w-[1600px]">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/partner-content-hub')}
-          className="mb-4 hover:bg-white/50"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
-        </Button>
+        <div className="flex justify-between items-center mb-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/partner-content-hub')}
+            className="hover:bg-white/50"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={handleDeleteProject}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Xóa Project
+          </Button>
+        </div>
 
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900 mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
