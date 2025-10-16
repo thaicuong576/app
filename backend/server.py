@@ -78,6 +78,26 @@ class TranslateRequest(BaseModel):
 class SocialGenerateRequest(BaseModel):
     content: str
 
+class KOLPost(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    information_source: str  # Can be text or URL
+    insight_required: str
+    generated_content: Optional[str] = None
+    source_type: str = "text"  # "text" or "url"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class KOLPostCreate(BaseModel):
+    information_source: str
+    insight_required: str
+    source_type: str = "text"
+
+class KOLPostGenerate(BaseModel):
+    information_source: str
+    insight_required: str
+    source_type: str = "text"
+
 # Helper functions
 async def download_image(image_url: str, project_id: str) -> Optional[str]:
     """Download image and return local path"""
