@@ -293,6 +293,76 @@ frontend:
         agent: "main"
         comment: "Tính năng hiện có từ trước, không thay đổi"
 
+  - task: "KOL Post Feature - Backend API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã tạo KOL Post feature với backend API:
+          - Model KOLPost với các field: information_source, insight_required, generated_content, source_type
+          - POST /api/kol-posts/generate: Generate bài viết KOL với AI
+            * Hỗ trợ 2 loại input: text hoặc URL
+            * URL scraping: tự động cào title và main content từ webpage
+            * AI học phong cách viết từ PDF (17 bài mẫu DQ Writing style)
+            * Sử dụng Gemini 2.5 Pro với GOOGLE_API_KEY
+            * System prompt bao gồm toàn bộ ví dụ và hướng dẫn phong cách KOL casual crypto
+          - GET /api/kol-posts: Lấy danh sách bài viết
+          - GET /api/kol-posts/{id}: Lấy 1 bài viết cụ thể
+          - DELETE /api/kol-posts/{id}: Xóa bài viết
+          - Lưu vào MongoDB collection kol_posts
+
+  - task: "KOL Post Feature - Frontend UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/KOLPost.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã tạo UI hoàn chỉnh cho KOL Post:
+          - Layout 2 cột giống Partner Content Hub
+          - Left panel: Input form
+            * Tabs để chọn Text hoặc URL
+            * Textarea cho "Thông tin cần học"
+            * Textarea cho "Nhận định cần có"
+            * Button "Tạo bài viết" với loading state
+          - Right panel: Danh sách bài viết đã tạo
+            * Hiển thị preview content
+            * Source type indicator (Text/URL)
+            * Timestamp
+            * Delete button cho mỗi bài
+          - Preview modal:
+            * Hiển thị full content
+            * Show insight và source info
+            * Copy to clipboard button
+          - Color scheme: #E38400 (orange) matching GFI Studio brand
+
+  - task: "Delete functionality cho Partner Content Hub"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/PartnerContentHub.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã thêm nút xóa project vào Workshop page:
+          - Button "Xóa Project" màu đỏ ở header
+          - Confirm dialog trước khi xóa
+          - Navigate về dashboard sau khi xóa thành công
+          - Sử dụng DELETE /api/projects/{id} endpoint (đã có sẵn)
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -301,7 +371,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "API endpoint để dịch và tái cấu trúc nội dung crypto"
+    - "KOL Post Feature - Backend API"
+    - "KOL Post Feature - Frontend UI"
+    - "Delete functionality cho Partner Content Hub"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
