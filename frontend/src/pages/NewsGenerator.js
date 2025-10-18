@@ -162,7 +162,7 @@ const NewsGenerator = () => {
                 News Generator
               </h1>
             </div>
-            <p className="text-lg text-white/80 ml-14">Tạo tin tức crypto tự động với AI</p>
+            <p className="text-lg text-white/80 ml-14">Tạo tin tức crypto ngắn gọn, đúng tone mạng xã hội với AI</p>
           </div>
         </div>
 
