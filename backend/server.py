@@ -848,7 +848,7 @@ Hãy tạo bản tin theo đúng phong cách đã chỉ định, giữ độ dà
 Nhận xét/Opinion từ người dùng:
 {request.opinion}"""
         
-        user_message_text += "\n\nHãy tạo bản tin crypto summary theo style đã chỉ định."
+        user_message_text += "\n\nHãy tạo bản tin crypto summary theo style đã chỉ định. Nhớ: BẮT ĐẦU NGAY với nội dung bản tin, KHÔNG thêm lời mở đầu hay giải thích."
         
         # Initialize Gemini chat
         chat = LlmChat(
