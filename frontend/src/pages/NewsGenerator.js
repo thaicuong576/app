@@ -259,7 +259,7 @@ const NewsGenerator = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500 mt-1">
-                  🎨 Style 1: Có list (👉), Style 2: Prose thuần
+                  🎨 Style 1 dùng list (👉) cho tin có số liệu. Style 2 là văn xuôi cho tin nhận định
                 </p>
               </div>
 
