@@ -508,7 +508,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "KOL Post Feature - Frontend UI"
+    - "News Generator Feature - Backend API"
+    - "News Generator Feature - Frontend UI"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
