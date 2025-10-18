@@ -175,7 +175,7 @@ const NewsGenerator = () => {
                 🔥 Tạo tin tức mới
               </CardTitle>
               <CardDescription>
-                Nhập nội dung nguồn và để AI tạo bản tóm tắt crypto
+                Nhập nội dung tiếng Anh - AI tạo bản tin tiếng Việt súc tích, dễ viral
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
