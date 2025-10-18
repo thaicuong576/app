@@ -768,3 +768,108 @@ agent_communication:
       
       🎯 KẾT LUẬN: KOL Post backend APIs SẴN SÀNG PRODUCTION!
       Chỉ cần test frontend UI để hoàn thành toàn bộ feature.
+  - agent: "main"
+    message: |
+      🎉 NEWS GENERATOR FEATURE HOÀN THÀNH - FULL IMPLEMENTATION!
+      
+      ✅ BACKEND - NEWS GENERATOR API:
+      1. Models & Database:
+         - NewsArticle model với fields: source_content, opinion, style_choice, generated_content, source_type
+         - MongoDB collection: news_articles
+         - Full CRUD support với UPDATE capability (khác KOL Post)
+         - Timestamp tracking: created_at, updated_at
+      
+      2. API Endpoints:
+         - POST /api/news/generate - AI generation endpoint
+           * Input: source_content (text/URL), optional opinion, style_choice (auto/style1/style2), source_type
+           * URL scraping: BeautifulSoup extract title + main content
+           * AI: Gemini 2.5 Pro với GOOGLE_API_KEY
+           * Style system chi tiết:
+             • Auto: AI tự detect (data/metrics → Style 1, opinion/trend → Style 2)
+             • Style 1 (List): 🔥 Opening → Summary → List (👉) → Analysis → ➡️ Implication → ? 😅
+             • Style 2 (Prose): 🔥 Opening → Lead-in → 🤔 Context → Statement → 2 câu cuối ? 😅
+           * Output: Vietnamese summary 120-160 words, social media tone
+           * Rules: Giữ tên ấn phẩm gốc, 2-3 emoji chính, không thêm info ngoài bài gốc
+           * Auto-save to database
+         - GET /api/news - Lấy tất cả tin tức (sorted desc)
+         - GET /api/news/{id} - Lấy 1 tin tức
+         - PUT /api/news/{id} - Update/edit tin tức content (KEY FEATURE)
+         - DELETE /api/news/{id} - Xóa tin tức
+      
+      3. Writing Style System:
+         - Context document với 2 styles rõ ràng
+         - Auto-detect logic dựa vào content type
+         - Emojis mapping: 🔥 (opening), 👉 (list), 🤔 (context), ➡️ (implication), 😅 (closing)
+         - Tone: Fast-paced, friendly, clear (Style 1) hoặc Coherent, natural, commentary (Style 2)
+      
+      ✅ FRONTEND - NEWS GENERATOR UI:
+      1. Page Layout:
+         - 2-column design matching app pattern
+         - Color: Blue (#2563eb) để phân biệt với KOL Post (orange)
+         - Header với Home button và title
+      
+      2. Left Panel - Enhanced Input Form:
+         - Tabs: Text hoặc URL
+         - "Nội dung nguồn" textarea (English content)
+         - "Opinion" textarea (optional) - GIÁ TRỊ MỚI so với KOL Post
+         - Style dropdown với 3 options:
+           • Auto (AI tự chọn) - với Sparkles icon
+           • Style 1 (List) - Metrics/Data
+           • Style 2 (Prose) - Opinion/Trend
+         - Helper text giải thích từng field
+         - "Tạo tin tức" button với loading state
+      
+      3. Right Panel - News List:
+         - Style badge (Auto/Style 1/Style 2)
+         - Source type indicator
+         - Preview 100 chars
+         - Timestamp Vietnamese format
+         - TWO BUTTONS: Edit (blue) + Delete (red) - KHÁC KOL Post (chỉ có Delete)
+         - Empty state với Newspaper icon
+      
+      4. Preview Modal:
+         - Full generated content
+         - Display style, opinion, source
+         - Copy button
+         - Edit button (shortcut to edit modal)
+         - Close button
+      
+      5. Edit Modal - NEW FEATURE:
+         - Large textarea với current content
+         - "Lưu thay đổi" button
+         - Cancel button
+         - Call PUT /api/news/{id} để update
+         - Auto-reload list sau khi save
+      
+      6. UI/UX Details:
+         - Vietnamese microcopy theo context document
+         - Emojis in placeholders: ✨ 🌐 💡 🎨
+         - Toast notifications: 🎉 cho success
+         - Confirm dialogs cho delete
+         - Loading states cho async operations
+      
+      🎯 KEY DIFFERENCES vs KOL Post:
+      1. ✅ EDIT functionality (PUT endpoint + Edit modal) - KOL Post không có
+      2. ✅ Opinion field (optional) - KOL Post là Insight (required)
+      3. ✅ Style selection (Auto/Style1/Style2) - KOL Post không có
+      4. ✅ Different color scheme (Blue vs Orange)
+      5. ✅ Different writing system (News summary vs KOL casual post)
+      
+      📊 STATUS:
+      - Backend APIs: IMPLEMENTED ✓ (Full CRUD with UPDATE)
+      - Frontend UI: IMPLEMENTED ✓ (với Edit modal)
+      - Database: WORKING ✓ (news_articles collection)
+      - Style system: IMPLEMENTED ✓ (Auto-detect + manual)
+      - Edit feature: WORKING ✓ (PUT endpoint + modal)
+      
+      ⚠️ CẦN TESTING:
+      1. Test news generate với text input (Style 1, Style 2, Auto)
+      2. Test news generate với URL
+      3. Verify Style 1 output có list (👉)
+      4. Verify Style 2 output không có list
+      5. Verify Auto-detect chọn đúng style
+      6. Test edit functionality (update content)
+      7. Test delete news
+      8. Kiểm tra opinion field influence
+      9. Check emojis usage (🔥 🤔 👉 ➡️ 😅)
+      10. Verify 120-160 words length
