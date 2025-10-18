@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://coder-hub-17.preview.emergentagent.com/api"
+BASE_URL = "https://md-news-generator.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 def print_test_header(test_name):
