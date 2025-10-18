@@ -203,7 +203,7 @@ const NewsGenerator = () => {
                       className="mt-2"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      ✨ Paste bài viết crypto tiếng Anh để AI tóm tắt
+                      ✨ Paste bài viết crypto tiếng Anh - AI sẽ tóm tắt thành tin tức tiếng Việt súc tích
                     </p>
                   </div>
                 </TabsContent>
