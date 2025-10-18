@@ -323,6 +323,35 @@ backend:
           🏆 KẾT QUẢ: 10/11 tests PASSED (chỉ URL scraping fail do website chặn - không phải lỗi hệ thống)
           KOL Post feature SẴN SÀNG PRODUCTION!
 
+  - task: "News Generator API endpoints - CRUD operations"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã implement News Generator CRUD operations:
+          - POST /api/news/generate - Generate tin tức crypto summary với AI
+            * Hỗ trợ 2 loại input: text hoặc URL
+            * URL scraping: tự động cào title và main content
+            * 3 style options: Auto (AI chọn), Style 1 (List), Style 2 (Prose)
+            * Optional opinion field để thêm góc nhìn
+            * Sử dụng Gemini 2.5 Pro với GOOGLE_API_KEY
+            * System prompt chi tiết cho 2 styles:
+              • Style 1: 🔥 Opening → Summary → List (👉) → Analysis → ➡️ Implication → Closing (? 😅)
+              • Style 2: 🔥 Opening → Lead-in → 🤔 Context → Statement → 2 câu cuối (? 😅)
+            * Auto-detect: Data/metrics → Style 1, Opinion/trend → Style 2
+            * Output: Vietnamese summary 120-160 từ, social media tone
+          - GET /api/news - Lấy tất cả tin tức (sorted by created_at desc)
+          - GET /api/news/{id} - Lấy 1 tin tức
+          - PUT /api/news/{id} - Update/edit tin tức content
+          - DELETE /api/news/{id} - Xóa tin tức
+          - Lưu vào MongoDB collection: news_articles
+
 frontend:
   - task: "Cập nhật button labels với emoji tiếng Việt"
     implemented: true
