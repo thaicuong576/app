@@ -462,6 +462,44 @@ frontend:
           - Response message: "Project deleted successfully"
           - Backend delete endpoint: HOẠT ĐỘNG ỔN ĐỊNH
 
+  - task: "News Generator Feature - Frontend UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/NewsGenerator.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã tạo UI hoàn chỉnh cho News Generator:
+          - Layout 2 cột matching KOL Post pattern
+          - Left panel: Input form
+            * Tabs: Text hoặc URL input
+            * Textarea "Nội dung nguồn" (English content)
+            * Textarea "Opinion" (optional field)
+            * Dropdown "Style Selection": Auto/Style 1/Style 2
+            * Button "Tạo tin tức" với loading state
+          - Right panel: Danh sách tin tức đã tạo
+            * Style badge (Auto/Style 1/Style 2)
+            * Source type indicator (Text/URL)
+            * Preview content (100 chars)
+            * Timestamp
+            * Edit button và Delete button
+          - Preview Modal:
+            * Display full generated content
+            * Show style, opinion, source info
+            * Copy button
+            * Edit button shortcut
+          - Edit Modal:
+            * Large textarea để chỉnh sửa content
+            * Save button để update
+            * Cancel button
+          - Color scheme: Blue (#2563eb) để phân biệt với KOL Post (orange)
+          - Vietnamese UI với emojis theo context document
+          - Full CRUD support: Create → Read → Update → Delete
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
