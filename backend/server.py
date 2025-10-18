@@ -98,6 +98,26 @@ class KOLPostGenerate(BaseModel):
     insight_required: str
     source_type: str = "text"
 
+class NewsArticle(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    source_content: str  # English content - text or URL
+    opinion: Optional[str] = None  # Optional user opinion/comment
+    style_choice: str = "auto"  # "auto", "style1", "style2"
+    generated_content: Optional[str] = None
+    source_type: str = "text"  # "text" or "url"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class NewsArticleGenerate(BaseModel):
+    source_content: str
+    opinion: Optional[str] = None
+    style_choice: str = "auto"
+    source_type: str = "text"
+
+class NewsArticleUpdate(BaseModel):
+    generated_content: str
+
 # Helper functions
 async def download_image(image_url: str, project_id: str) -> Optional[str]:
     """Download image and return local path"""
