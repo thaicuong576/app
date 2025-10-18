@@ -660,6 +660,196 @@ Hãy viết 1 bài post theo phong cách của bạn, kết hợp thông tin tr�
         logging.error(f"KOL post generation error: {e}")
         raise HTTPException(status_code=500, detail=f"KOL post generation failed: {str(e)}")
 
+# News Generator endpoints
+@api_router.post("/news", response_model=NewsArticle)
+async def create_news_article(news_data: NewsArticleGenerate):
+    """Create a new news article without generating content"""
+    news = NewsArticle(**news_data.dict())
+    await db.news_articles.insert_one(news.dict())
+    return news
+
+@api_router.get("/news", response_model=List[NewsArticle])
+async def get_news_articles():
+    """Get all news articles"""
+    articles = await db.news_articles.find().sort("created_at", -1).to_list(100)
+    return articles
+
+@api_router.get("/news/{news_id}", response_model=NewsArticle)
+async def get_news_article(news_id: str):
+    """Get a specific news article"""
+    article = await db.news_articles.find_one({"id": news_id})
+    if not article:
+        raise HTTPException(status_code=404, detail="News article not found")
+    return article
+
+@api_router.put("/news/{news_id}", response_model=NewsArticle)
+async def update_news_article(news_id: str, update: NewsArticleUpdate):
+    """Update news article content"""
+    result = await db.news_articles.update_one(
+        {"id": news_id},
+        {
+            "$set": {
+                "generated_content": update.generated_content,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="News article not found")
+    
+    article = await db.news_articles.find_one({"id": news_id})
+    return article
+
+@api_router.delete("/news/{news_id}")
+async def delete_news_article(news_id: str):
+    """Delete a news article"""
+    result = await db.news_articles.delete_one({"id": news_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="News article not found")
+    return {"message": "News article deleted successfully"}
+
+@api_router.post("/news/generate")
+async def generate_news_article(request: NewsArticleGenerate):
+    """Generate crypto news summary using AI"""
+    try:
+        # Get source content
+        source_content = request.source_content
+        
+        # If source is URL, scrape the content
+        if request.source_type == "url":
+            try:
+                response = requests.get(request.source_content, timeout=15, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                })
+                response.raise_for_status()
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Remove script and style elements
+                for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
+                    script.decompose()
+                
+                # Get title
+                title = soup.find('title')
+                title_text = title.get_text().strip() if title else ""
+                
+                # Get main content
+                main_content = ""
+                content_areas = soup.find_all(['article', 'main', 'div'], class_=lambda x: x and any(c in str(x).lower() for c in ['content', 'article', 'post', 'entry']))
+                if content_areas:
+                    main_content = ' '.join([area.get_text(separator=' ', strip=True) for area in content_areas])
+                else:
+                    paragraphs = soup.find_all('p')
+                    main_content = ' '.join([p.get_text(separator=' ', strip=True) for p in paragraphs])
+                
+                source_content = f"Title: {title_text}\n\nContent:\n{main_content}"
+                
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Không thể cào nội dung từ URL: {str(e)}")
+        
+        # Determine style based on choice
+        style_instruction = ""
+        if request.style_choice == "style1":
+            style_instruction = """
+STYLE 1 (With List) - Dùng cho tin tức có metrics, facts, market updates:
+
+Cấu trúc:
+1. Opening: 🔥 Headline hấp dẫn, nhấn mạnh con số hoặc sự kiện chính
+2. Summary: Đoạn ngắn tóm tắt context hoặc nguồn tin
+3. Focus: 2-3 dòng dạng list, dùng icon 👉
+4. Analysis: Giải thích ý nghĩa, xu hướng, hoặc tác động
+5. Implication/Forecast: ➡️ Nêu hướng đi tiếp theo hoặc khả năng xảy ra
+6. Closing: Câu hỏi mở thân thiện kèm emoji (VD: "Các bạn nghĩ sao? 😅" hoặc "Đây có phải dấu hiệu để tích trữ không ae? 😅")
+
+Tone: Nhanh, ngắn gọn, thân thiện, rõ ràng.
+"""
+        elif request.style_choice == "style2":
+            style_instruction = """
+STYLE 2 (Without List) - Dùng cho tin về opinions, trends, policies, statements:
+
+Cấu trúc:
+1. Opening: 🔥 + headline chỉ ra hướng đi (trend, người, hành động)
+2. Lead-in: Giới thiệu người/chủ thể + hành động cụ thể
+3. Context: 🤔 Giải thích ngắn gọn tại sao đây là sự kiện đáng chú ý
+4. Statement/Reinforcement: Có thể trích dẫn 1 câu hoặc quan điểm
+5. Closing: Hai câu cuối cùng tách rời, ăn khớp, khuyến khích tương tác
+   VD: 
+   Cuộc chiến này không chỉ là của một cá nhân.
+   Nhà Trắng đang muốn tăng ảnh hưởng lên Fed? Các bạn nghĩ sao? 😅
+
+Tone: Mạch lạc, tự nhiên, hơi commentary.
+"""
+        else:  # auto
+            style_instruction = """
+TỰ ĐỘNG CHỌN STYLE dựa vào nội dung:
+- Nếu nhiều data/con số/metrics → dùng Style 1 (With List)
+- Nếu về policies/trends/opinions/người → dùng Style 2 (Without List)
+
+STYLE 1 (With List):
+Cấu trúc: 🔥 Opening → Summary → List (👉) → Analysis → ➡️ Implication → Closing (? 😅)
+Tone: Nhanh, ngắn gọn, thân thiện
+
+STYLE 2 (Without List):
+Cấu trúc: 🔥 Opening → Lead-in → 🤔 Context → Statement → 2 câu cuối (? 😅)
+Tone: Mạch lạc, tự nhiên, commentary
+"""
+        
+        # System message for News Generator
+        system_message = f"""Bạn là một News Generator AI chuyên tạo bản tóm tắt tin tức crypto ngắn gọn bằng tiếng Việt.
+
+{style_instruction}
+
+QUY TẮC CHUNG:
+- Giữ nguyên tên ấn phẩm gốc (VD: Financial Times (UK))
+- Emojis: Chỉ dùng 2-3 cái chính (🔥 🤔 👉 ➡️ 😅)
+- KHÔNG thêm thông tin ngoài bài gốc
+- KHÔNG dùng meme hoặc emoji quá nhiều
+- Quotes: Có thể giữ tiếng Anh hoặc dịch tự nhiên
+- Độ dài: 120-160 từ
+- Tone: Social media (Twitter/Telegram/LinkedIn) - emotional, logical, dễ đọc
+
+OUTPUT: Bản tóm tắt tiếng Việt NGẮN GỌN, súc tích, dễ lan truyền."""
+
+        # Build user message
+        user_message_text = f"""Nội dung nguồn (tiếng Anh):
+
+{source_content}"""
+        
+        if request.opinion:
+            user_message_text += f"""
+
+Nhận xét/Opinion từ người dùng:
+{request.opinion}"""
+        
+        user_message_text += "\n\nHãy tạo bản tin crypto summary theo style đã chỉ định."
+        
+        # Initialize Gemini chat
+        chat = LlmChat(
+            api_key=GOOGLE_API_KEY,
+            session_id=f"news_{uuid.uuid4().hex[:8]}",
+            system_message=system_message
+        ).with_model("gemini", "gemini-2.5-pro")
+        
+        # Generate content
+        user_message = UserMessage(user_message_text)
+        response = await chat.send_message(user_message)
+        
+        # Create and save news article
+        news_article = NewsArticle(
+            source_content=request.source_content,
+            opinion=request.opinion,
+            style_choice=request.style_choice,
+            generated_content=response.strip(),
+            source_type=request.source_type
+        )
+        
+        await db.news_articles.insert_one(news_article.dict())
+        
+        return news_article
+    
+    except Exception as e:
+        logging.error(f"News generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"News generation failed: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
