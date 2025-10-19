@@ -259,6 +259,7 @@ const Workshop = () => {
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [socialContent, setSocialContent] = useState(null);
   const [customPreset, setCustomPreset] = useState('');
+  const [customPresetSocial, setCustomPresetSocial] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
