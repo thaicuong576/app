@@ -898,6 +898,195 @@ Nhận xét/Opinion từ người dùng:
         logging.error(f"News generation error: {e}")
         raise HTTPException(status_code=500, detail=f"News generation failed: {str(e)}")
 
+# Social-to-Website Post endpoints
+@api_router.post("/social-posts", response_model=SocialPost)
+async def create_social_post(post_data: SocialPostGenerate):
+    """Create a new social post without generating content"""
+    post = SocialPost(**post_data.dict())
+    await db.social_posts.insert_one(post.dict())
+    return post
+
+@api_router.get("/social-posts", response_model=List[SocialPost])
+async def get_social_posts():
+    """Get all social posts"""
+    posts = await db.social_posts.find().sort("created_at", -1).to_list(length=100)
+    return posts
+
+@api_router.get("/social-posts/{post_id}", response_model=SocialPost)
+async def get_social_post(post_id: str):
+    """Get a specific social post"""
+    post = await db.social_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Social post not found")
+    return post
+
+@api_router.put("/social-posts/{post_id}", response_model=SocialPost)
+async def update_social_post(post_id: str, update: SocialPostUpdate):
+    """Update social post content"""
+    result = await db.social_posts.update_one(
+        {"id": post_id},
+        {
+            "$set": {
+                "generated_content": update.generated_content,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Social post not found")
+    
+    post = await db.social_posts.find_one({"id": post_id})
+    return post
+
+@api_router.delete("/social-posts/{post_id}")
+async def delete_social_post(post_id: str):
+    """Delete a social post"""
+    result = await db.social_posts.delete_one({"id": post_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Social post not found")
+    return {"message": "Social post deleted successfully"}
+
+@api_router.post("/social-posts/generate")
+async def generate_social_post(request: SocialPostGenerate):
+    """Generate social-to-website post using AI"""
+    try:
+        # Scrape website content if URL provided
+        website_content = ""
+        if request.website_link:
+            try:
+                response = requests.get(request.website_link, timeout=15, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                })
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Remove script and style elements
+                for script in soup(["script", "style"]):
+                    script.decompose()
+                
+                # Get text content
+                website_content = soup.get_text(separator=' ', strip=True)
+                # Limit content length
+                website_content = website_content[:5000]
+                
+            except Exception as e:
+                logging.error(f"Error scraping website: {e}")
+                raise HTTPException(status_code=400, detail=f"Không thể cào nội dung từ URL: {str(e)}")
+        
+        # Build system message based on context engineering
+        system_message = """Bạn là một AI chuyên tạo bài đăng social media để dẫn traffic về website (GFI Research).
+
+🎯 MỤC TIÊU:
+Tạo bài viết đăng trên các nền tảng social (X, Facebook, LinkedIn) để dẫn người đọc về website, nơi có bài phân tích chi tiết.
+- Độ dài: 150–180 từ
+- Cấu trúc: 3–4 đoạn ngắn
+- Tone: Chuyên nghiệp – dễ đọc – giàu thông tin (giống KOL crypto)
+
+📝 CẤU TRÚC BÀI VIẾT (4 PHẦN):
+
+1️⃣ **TITLE (Hook nhà đầu tư)**
+   - Thu hút đầu tiên, chứa yếu tố "giật nhẹ"
+   - Có số liệu hoặc câu hỏi gợi tò mò
+   - Có thể dùng chữ in hoa, icon, số liệu lớn
+   - Ví dụ: "🔥 Gọi vốn 130 TRIỆU ĐÔ với định giá 1 TỶ ĐÔ – Dự án này có gì mà 'nổ' cả X?"
+
+2️⃣ **GIỚI THIỆU DỰ ÁN**
+   - Cung cấp bối cảnh và tóm tắt trong 1–2 câu
+   - Trả lời: "Dự án này là gì, giải quyết vấn đề nào, và vì sao được chú ý?"
+
+3️⃣ **ĐIỂM NỔI BẬT/RÒ RỈ**
+   - Tiết lộ chi tiết gây tò mò: gọi vốn, tranh luận, công nghệ, nhân vật, insight
+   - Dạng câu tự nhiên, có thể dùng icon (⚡, 🤔, 💸...)
+   - Ví dụ: "😳 Nhưng nhìn on-chain lại thấy một câu chuyện khác..."
+
+4️⃣ **CTA (Call to Action)**
+   - Đưa người đọc về website
+   - Kết thúc bằng câu hỏi hoặc gợi mở
+   - Ví dụ: "Cùng GFI tìm hiểu tại bài viết này 👇"
+
+🎨 TONE & BRAND VOICE:
+- **Phong cách:** Chuyên nghiệp, dễ đọc, giàu thông tin
+- **Đối tượng:** Nhà đầu tư, người quan tâm crypto
+- **Giống:** Các KOL crypto hàng đầu
+- **Độ dài chặt chẽ:** 150–180 từ
+
+⚙️ QUY TẮC KỸ THUẬT:
+- Số đoạn: 3–4 đoạn ngắn
+- Yếu tố thu hút: Số liệu, câu hỏi, chữ in hoa, icon
+- Mục đích: Dẫn traffic về website
+- CTA: Luôn có và rõ ràng, kèm link về website
+
+💡 LOGIC FILL SYSTEM:
+1. Nếu user điền title → giữ nguyên. Nếu trống → AI sinh hook giật nhẹ với số liệu/câu hỏi
+2. Nếu user điền giới thiệu → dùng nguyên văn. Nếu trống → AI tóm tắt từ web content
+3. Nếu user điền điểm nổi bật → giữ nguyên. Nếu trống → AI chọn insight hấp dẫn nhất từ bài web
+4. Thêm CTA rõ ràng hướng về website, kèm link
+
+📤 OUTPUT FORMATTING RULES:
+- **KHÔNG** bắt đầu bằng: "Chắc chắn rồi", "Dưới đây là", "Sure", "Here's your text"
+- Bắt đầu **NGAY LẬP TỨC** với nội dung (title/câu mở đầu)
+- **KHÔNG** bao gồm bình luận ngoài lề, giải thích
+- Output phải sẵn sàng để đăng lên social media ngay
+
+Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ định."""
+
+        # Build user message
+        user_message_parts = []
+        
+        # Add website content
+        if website_content:
+            user_message_parts.append(f"NỘI DUNG TỪ WEBSITE:\n{website_content[:3000]}")
+        
+        user_message_parts.append(f"\nLINK WEBSITE: {request.website_link}")
+        
+        # Add user inputs if provided
+        if request.title:
+            user_message_parts.append(f"\nTITLE (do user cung cấp):\n{request.title}")
+        else:
+            user_message_parts.append("\nTITLE: (để trống - AI tự sinh hook giật tít)")
+        
+        if request.introduction:
+            user_message_parts.append(f"\nGIỚI THIỆU (do user cung cấp):\n{request.introduction}")
+        else:
+            user_message_parts.append("\nGIỚI THIỆU: (để trống - AI tự tóm tắt dự án)")
+        
+        if request.highlight:
+            user_message_parts.append(f"\nĐIỂM NỔI BẬT (do user cung cấp):\n{request.highlight}")
+        else:
+            user_message_parts.append("\nĐIỂM NỔI BẬT: (để trống - AI tự chọn insight hấp dẫn)")
+        
+        user_message_parts.append("\n\nHãy tạo bài social post hoàn chỉnh với CTA dẫn về website. Nhớ: BẮT ĐẦU NGAY với nội dung, KHÔNG thêm lời mở đầu.")
+        
+        user_message_text = "\n".join(user_message_parts)
+        
+        # Initialize Gemini chat
+        chat = LlmChat(
+            api_key=GOOGLE_API_KEY,
+            session_id=f"social_{uuid.uuid4().hex[:8]}",
+            system_message=system_message
+        ).with_model("gemini", "gemini-2.5-pro")
+        
+        # Generate content
+        user_message = UserMessage(user_message_text)
+        response = await chat.send_message(user_message)
+        
+        # Create and save social post
+        social_post = SocialPost(
+            website_link=request.website_link,
+            title=request.title,
+            introduction=request.introduction,
+            highlight=request.highlight,
+            generated_content=response.strip()
+        )
+        
+        await db.social_posts.insert_one(social_post.dict())
+        
+        return social_post
+    
+    except Exception as e:
+        logging.error(f"Social post generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Social post generation failed: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
