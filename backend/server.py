@@ -118,6 +118,26 @@ class NewsArticleGenerate(BaseModel):
 class NewsArticleUpdate(BaseModel):
     generated_content: str
 
+class SocialPost(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    website_link: str  # Required - URL to GFI Research article
+    title: Optional[str] = None  # Optional - AI will generate if empty
+    introduction: Optional[str] = None  # Optional - AI will generate if empty
+    highlight: Optional[str] = None  # Optional - AI will generate if empty
+    generated_content: Optional[str] = None  # Final generated social post
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SocialPostGenerate(BaseModel):
+    website_link: str
+    title: Optional[str] = None
+    introduction: Optional[str] = None
+    highlight: Optional[str] = None
+
+class SocialPostUpdate(BaseModel):
+    generated_content: str
+
 # Helper functions
 async def download_image(image_url: str, project_id: str) -> Optional[str]:
     """Download image and return local path"""
