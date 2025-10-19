@@ -190,6 +190,16 @@ backend:
           - HTML content giờ hiển thị đúng với heading format
           - Không còn hiển thị markdown syntax trong output
           - Backend restart thành công
+      - working: true
+        agent: "main"
+        comment: |
+          ✅ CẢI THIỆN COPY FUNCTIONALITY - Copy với định dạng HTML:
+          - Sử dụng Clipboard API với ClipboardItem
+          - Copy cả text/html và text/plain format
+          - Khi paste vào Word/Google Docs: giữ nguyên headings, bold, format
+          - Khi paste vào plain text editor: tự động chuyển sang plain text
+          - Có fallback về plain text nếu browser không support rich text
+          - Frontend build thành công
 
   - task: "API endpoint để tạo nội dung social media"
     implemented: true
