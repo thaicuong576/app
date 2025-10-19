@@ -481,6 +481,23 @@ const Workshop = () => {
                   )}
                 </Button>
 
+                {/* Custom Preset for Social Content */}
+                <div className="space-y-2 pt-4 border-t border-gray-200">
+                  <Label htmlFor="customPresetSocial" className="text-sm font-semibold text-gray-700">
+                    Custom Preset Social (Tùy chọn)
+                  </Label>
+                  <Textarea
+                    id="customPresetSocial"
+                    placeholder="Thêm hướng dẫn tùy chỉnh cho social content..."
+                    value={customPresetSocial}
+                    onChange={(e) => setCustomPresetSocial(e.target.value)}
+                    className="min-h-[100px] text-sm"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Hướng dẫn này sẽ được kết hợp với preset tạo social content mặc định
+                  </p>
+                </div>
+
                 <Button
                   data-testid="generate-social-btn"
                   onClick={handleGenerateSocial}
