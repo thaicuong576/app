@@ -301,7 +301,8 @@ const Workshop = () => {
     setGeneratingSocial(true);
     try {
       const response = await axios.post(`${API}/projects/${projectId}/social`, {
-        content: content
+        content: content,
+        custom_preset: customPresetSocial
       });
       setSocialContent(response.data);
       setShowSocialModal(true);
