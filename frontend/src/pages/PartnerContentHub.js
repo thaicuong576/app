@@ -354,16 +354,16 @@ const Workshop = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#004154] via-[#005568] to-[#003844]">
       <div className="container mx-auto px-4 py-8 max-w-[1600px]">
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
             onClick={() => navigate('/partner-content-hub')}
-            className="hover:bg-white/50"
+            className="hover:bg-white/10 text-white"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Quay lại Dashboard
           </Button>
           
           <Button
@@ -377,11 +377,11 @@ const Workshop = () => {
         </div>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             {project.title}
           </h1>
           {project.source_url && (
-            <a href={project.source_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline flex items-center">
+            <a href={project.source_url} target="_blank" rel="noopener noreferrer" className="text-[#E38400] hover:underline flex items-center">
               <LinkIcon className="h-4 w-4 mr-1" />
               {project.source_url}
             </a>
@@ -390,7 +390,7 @@ const Workshop = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* Editor Section */}
-          <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-xl">
+          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Content Editor</span>
