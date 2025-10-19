@@ -313,16 +313,36 @@ const Workshop = () => {
     }
   };
 
-  const handleCopyContent = () => {
-    // Create a temporary element to parse HTML and get formatted text
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-    
-    // Get the formatted text with line breaks preserved
-    const formattedText = tempDiv.innerText || tempDiv.textContent;
-    
-    navigator.clipboard.writeText(formattedText);
-    toast.success('Content copied to clipboard!');
+  const handleCopyContent = async () => {
+    try {
+      // Create a ClipboardItem with both HTML and plain text formats
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      
+      // Get plain text as fallback
+      const plainText = tempDiv.innerText || tempDiv.textContent;
+      
+      // Create blob for HTML content
+      const htmlBlob = new Blob([content], { type: 'text/html' });
+      const textBlob = new Blob([plainText], { type: 'text/plain' });
+      
+      // Use ClipboardItem to copy with formatting
+      const clipboardItem = new ClipboardItem({
+        'text/html': htmlBlob,
+        'text/plain': textBlob
+      });
+      
+      await navigator.clipboard.write([clipboardItem]);
+      toast.success('Content copied with formatting!');
+    } catch (error) {
+      // Fallback to plain text if rich text copy fails
+      console.error('Rich copy failed, using plain text:', error);
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      const plainText = tempDiv.innerText || tempDiv.textContent;
+      navigator.clipboard.writeText(plainText);
+      toast.success('Content copied to clipboard!');
+    }
   };
 
   const handleCopyText = (text, label) => {
