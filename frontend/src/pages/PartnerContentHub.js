@@ -417,7 +417,7 @@ const Workshop = () => {
 
           {/* AI Control Panel */}
           <div className="space-y-4">
-            <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-xl sticky top-8">
+            <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl sticky top-8">
               <CardHeader>
                 <CardTitle className="text-xl">AI Control Panel</CardTitle>
                 <CardDescription>Transform your content with AI</CardDescription>
@@ -425,18 +425,18 @@ const Workshop = () => {
               <CardContent className="space-y-4">
                 {/* Custom Preset Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="customPreset" className="text-sm font-semibold text-slate-700">
-                    Custom Preset (Optional)
+                  <Label htmlFor="customPreset" className="text-sm font-semibold text-gray-700">
+                    Custom Preset (Tùy chọn)
                   </Label>
                   <Textarea
                     id="customPreset"
-                    placeholder="Add custom instructions to combine with the default preset..."
+                    placeholder="Thêm hướng dẫn tùy chỉnh kết hợp với preset mặc định..."
                     value={customPreset}
                     onChange={(e) => setCustomPreset(e.target.value)}
                     className="min-h-[100px] text-sm"
                   />
-                  <p className="text-xs text-slate-500">
-                    These instructions will be combined with the default translation preset
+                  <p className="text-xs text-gray-500">
+                    Hướng dẫn này sẽ được kết hợp với preset dịch thuật mặc định
                   </p>
                 </div>
 
@@ -444,7 +444,7 @@ const Workshop = () => {
                   data-testid="translate-btn"
                   onClick={handleTranslate}
                   disabled={translating}
-                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg shadow-md"
+                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl shadow-md"
                 >
                   {translating ? (
                     <>
@@ -463,7 +463,7 @@ const Workshop = () => {
                   data-testid="generate-social-btn"
                   onClick={handleGenerateSocial}
                   disabled={generatingSocial}
-                  className="w-full h-12 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-lg shadow-md"
+                  className="w-full h-12 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-xl shadow-md"
                 >
                   {generatingSocial ? (
                     <>
