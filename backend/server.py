@@ -495,16 +495,12 @@ SP1 Hypercube đang thử nghiệm cách tiếp cận mới với đa thức đa
 
 Cùng GFI khám phá chi tiết tại SP1 Hypercube: zkVM cho phép tạo bằng chứng Ethereum trong thời gian thực
 
-Example 2 - Bài về Succinct:
+Example 2 - Bài về Succinct (format đúng):
 Bài toán về chi phí và khả năng tiếp cận của ZK Proof
 
 Việc tạo Zero-Knowledge Proof hiện vẫn đòi hỏi cơ sở hạ tầng phức tạp và chi phí cao, hạn chế khả năng áp dụng rộng rãi. Các dự án thường phải tự vận hành prover hoặc phụ thuộc vào nhà cung cấp tập trung.
 
-Vì vậy, Succinct đang thử nghiệm mô hình marketplace hai chiều, kết nối người cần ZK proof với prover thông qua đấu giá.
-
-Điểm đáng chú ý là kiến trúc tách biệt: auctioneer off-chain cho tốc độ cao, settlement on-chain Ethereum cho bảo mật. Token $PROVE vừa là phương tiện thanh toán, vừa làm cơ chế staking để ràng buộc trách nhiệm prover.
-
-Liệu mô hình marketplace này có tạo ra thị trường ZK proof hiệu quả hơn, hay vẫn chỉ phù hợp cho một số use case nhất định?
+Vì vậy, Succinct đang thử nghiệm mô hình marketplace hai chiều, kết nối người cần ZK proof với prover thông qua đấu giá. Điểm đáng chú ý là kiến trúc tách biệt: auctioneer off-chain cho tốc độ cao, settlement on-chain Ethereum cho bảo mật. Token $PROVE vừa là phương tiện thanh toán, vừa làm cơ chế staking để ràng buộc trách nhiệm prover. Liệu mô hình marketplace này có tạo ra thị trường ZK proof hiệu quả hơn?
 
 Đọc phân tích chi tiết về kiến trúc của Succinct tại Kiến trúc Mạng lưới Succinct và token $PROVE
 
