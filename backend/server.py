@@ -955,9 +955,11 @@ async def delete_social_post(post_id: str):
 async def generate_social_post(request: SocialPostGenerate):
     """Generate social-to-website post using AI"""
     try:
-        # Scrape website content if URL provided
+        # Get website content based on source type
         website_content = ""
-        if request.website_link:
+        
+        if request.source_type == "url" and request.website_link:
+            # Scrape website content from URL
             try:
                 response = requests.get(request.website_link, timeout=15, headers={
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -976,6 +978,13 @@ async def generate_social_post(request: SocialPostGenerate):
             except Exception as e:
                 logging.error(f"Error scraping website: {e}")
                 raise HTTPException(status_code=400, detail=f"Không thể cào nội dung từ URL: {str(e)}")
+        
+        elif request.source_type == "text" and request.website_content:
+            # Use provided text content
+            website_content = request.website_content[:5000]
+        
+        if not website_content:
+            raise HTTPException(status_code=400, detail="Vui lòng cung cấp URL hoặc nội dung website")
         
         # Build system message based on context engineering
         system_message = """Bạn là một AI chuyên tạo bài đăng social media để dẫn traffic về website (GFI Research).
