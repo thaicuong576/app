@@ -476,19 +476,23 @@ async def generate_social_content(project_id: str, request: SocialGenerateReques
 {custom_instructions}
 YÊU CẦU FORMAT OUTPUT:
 - Viết thành 1 bài post liền mạch, KHÔNG CÓ labels như "Tiêu đề:", "Nội dung:", "CTA:"
-- Dòng đầu tiên: Tiêu đề của bài (không cần label)
+- Dòng đầu tiên: Tiêu đề của bài (không cần label) - SỬ DỤNG EMOJI 🔥 hoặc 🤔 ở đầu tiêu đề
 - Sau đó xuống dòng và viết nội dung chính
 - Nội dung chính chia thành 2 đoạn văn (mỗi đoạn cân đối độ dài), ngăn cách bởi 1 dòng trống
-- Đoạn cuối: CTA về GFI Research với mention link
+- Sử dụng emojis phù hợp trong nội dung: 🙂 ➡️ 🎯 🤔 (2-3 emojis trong bài)
+- Đoạn cuối: CTA về GFI Research với emoji ➡️ và link đầy đủ
 - Tổng cộng: Tiêu đề + 2 đoạn nội dung + 1 đoạn CTA
 
 OUTLINE CỦA BÀI POST:
-- Tiêu đề (dòng đầu)
+- Tiêu đề (dòng đầu) - có emoji 🔥 hoặc 🤔
 - Nội dung chính đoạn 1 (context và vấn đề)
-- Nội dung chính đoạn 2 (insight và detail kỹ thuật)
-- CTA về bài viết gốc GFI Research
+- Nội dung chính đoạn 2 (insight và detail kỹ thuật) - có emoji như 🙂 ➡️ 🎯
+- CTA về bài viết gốc GFI Research - có emoji ➡️ và link
 
-Lưu ý: Viết với góc nhìn thứ ba, không shill dự án
+Lưu ý: 
+- Viết với góc nhìn thứ ba, không shill dự án
+- Sử dụng emojis tự nhiên, không lạm dụng (2-3 emojis tổng cộng)
+- Luôn có link đầy đủ trong CTA
 
 VÍ DỤ THAM KHẢO (3 examples với format mới):
 
