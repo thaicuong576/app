@@ -1088,6 +1088,8 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
         # Create and save social post
         social_post = SocialPost(
             website_link=request.website_link,
+            website_content=request.website_content,
+            source_type=request.source_type,
             title=request.title,
             introduction=request.introduction,
             highlight=request.highlight,
