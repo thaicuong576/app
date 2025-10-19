@@ -465,11 +465,56 @@ async def generate_social_content(project_id: str, request: SocialGenerateReques
             system_message="Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto."
         ).with_model("gemini", "gemini-2.0-flash-exp")
         
-        # Use exact user preset prompt
-        prompt = f"""ok giờ đọc bài đó và hãy viết bài post telegram ngắn cho tôi nhé, khoảng 100 từ thôi, theo outline sau: title dẫn dắt các vấn đề hiện tại của thị trường sau đó giới thiệu 1 phần nội dung có insight (ngắn, sao cho đừng quá shill Succinct) kết luận và CTA về bài GFI Research gốc
+        # Combined preset with examples from Partner (mới).pdf
+        prompt = f"""ok giờ đọc bài đó và hãy viết bài post telegram ngắn cho tôi nhé, khoảng 100 từ thôi, theo outline sau: title dẫn dắt các vấn đề hiện tại của thị trường sau đó giới thiệu 1 phần nội dung có insight (ngắn, sao cho đừng quá shill dự án) kết luận và CTA về bài GFI Research gốc
+
+OUTLINE CỦA BÀI POST:
+- Tiêu đề
+- Nội dung chính (với insight)
+- Dẫn về bài viết gốc
+
 Lưu ý: Viết với góc nhìn thứ ba, không shill dự án
 
-Bài viết:
+VÍ DỤ THAM KHẢO (3 examples):
+
+Example 1 - Bài về SP1 Hypercube:
+Tạo bằng chứng khối Ethereum chỉ trong 12 giây: Bài toán tốc độ cho ZK rollups
+
+Một trong những rào cản lớn cho ZK rollups trên Ethereum là thời gian tạo bằng chứng. Mục tiêu là proving dưới 12 giây, thời gian slot của Ethereum, để đạt được finality thực sự thời gian thực.
+
+SP1 Hypercube đang thử nghiệm cách tiếp cận mới với đa thức đa tuyến thay vì đa thức đơn biến truyền thống.
+
+AE nghĩ đây có phải là đột phá thực sự cho ZK Ethereum, hay vẫn còn xa mới đến sự công nhận rộng rãi do yêu cầu phần cứng?
+
+Cùng GFI khám phá chi tiết tại SP1 Hypercube: zkVM cho phép tạo bằng chứng Ethereum trong thời gian thực
+
+Example 2 - Bài về Succinct:
+Bài toán về chi phí và khả năng tiếp cận của ZK Proof
+
+Việc tạo Zero-Knowledge Proof hiện vẫn đòi hỏi cơ sở hạ tầng phức tạp và chi phí cao, hạn chế khả năng áp dụng rộng rãi. Các dự án thường phải tự vận hành prover hoặc phụ thuộc vào nhà cung cấp tập trung.
+
+Vì vậy, Succinct đang thử nghiệm mô hình marketplace hai chiều, kết nối người cần ZK proof với prover thông qua đấu giá.
+
+Điểm đáng chú ý là kiến trúc tách biệt: auctioneer off-chain cho tốc độ cao, settlement on-chain Ethereum cho bảo mật. Token $PROVE vừa là phương tiện thanh toán, vừa làm cơ chế staking để ràng buộc trách nhiệm prover.
+
+Liệu mô hình marketplace này có tạo ra thị trường ZK proof hiệu quả hơn, hay vẫn chỉ phù hợp cho một số use case nhất định?
+
+Đọc phân tích chi tiết về kiến trúc của Succinct tại Kiến trúc Mạng lưới Succinct và token $PROVE
+
+Example 3 - Bài về BitVM:
+Bitcoin Script và bài toán ứng dụng phức tạp: Liệu ZK Proof có là lời giải?
+
+Bitcoin Script (Ngôn ngữ lập trình của Bitcoin) được thiết kế không hoàn chỉnh về tính toán để tối ưu bảo mật, nhưng điều này cũng hạn chế khả năng xây dựng các ứng dụng phức tạp như rollup hay bridge phi tín nhiệm trên Bitcoin.
+
+BitVM đang thử nghiệm cách tiếp cận mới bằng việc xác minh tính toán thay vì thực thi trực tiếp. Điểm kỹ thuật đáng chú ý là BLAKE3 chỉ cần 7 vòng nén so với 64 vòng của SHA256, giúp giảm đáng kể chi phí xác minh ZK Proof trên Bitcoin Script.
+
+Một số dự án như Alpen Labs (ZK rollup), Babylon (bridge phi tín nhiệm) đang thử nghiệm mô hình này. Tuy nhiên, liệu cách tiếp cận này có đủ hiệu quả và bảo mật cho ứng dụng thực tế?
+
+Cùng GFI tìm hiểu chi tiết về hướng tiếp cận kĩ thuật của Succinct tại Succinct mở ra khả năng xác minh ZK Proof trên Bitcoin thông qua BitVM
+
+---
+
+BÀI VIẾT CẦN TẠO SOCIAL POST:
 {request.content}"""
         
         user_message = UserMessage(text=prompt)
