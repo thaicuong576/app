@@ -77,6 +77,7 @@ class TranslateRequest(BaseModel):
 
 class SocialGenerateRequest(BaseModel):
     content: str
+    custom_preset: str = ""
 
 class KOLPost(BaseModel):
     model_config = ConfigDict(extra="ignore")
