@@ -466,9 +466,14 @@ async def generate_social_content(project_id: str, request: SocialGenerateReques
             system_message="Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto."
         ).with_model("gemini", "gemini-2.0-flash-exp")
         
+        # Build custom preset addition if provided
+        custom_instructions = ""
+        if request.custom_preset:
+            custom_instructions = f"\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n{request.custom_preset}\n"
+        
         # Combined preset with examples from Partner (mới).pdf
         prompt = f"""ok giờ đọc bài đó và hãy viết bài post telegram ngắn cho tôi nhé, khoảng 100 từ thôi, theo outline sau: title dẫn dắt các vấn đề hiện tại của thị trường sau đó giới thiệu 1 phần nội dung có insight (ngắn, sao cho đừng quá shill dự án) kết luận và CTA về bài GFI Research gốc
-
+{custom_instructions}
 YÊU CẦU FORMAT OUTPUT:
 - Viết thành 1 bài post liền mạch, KHÔNG CÓ labels như "Tiêu đề:", "Nội dung:", "CTA:"
 - Dòng đầu tiên: Tiêu đề của bài (không cần label)
