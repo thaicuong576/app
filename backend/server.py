@@ -121,7 +121,9 @@ class NewsArticleUpdate(BaseModel):
 class SocialPost(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    website_link: str  # Required - URL to GFI Research article
+    website_link: Optional[str] = None  # URL to GFI Research article (optional now)
+    website_content: Optional[str] = None  # Text content (optional)
+    source_type: str = "url"  # "url" or "text"
     title: Optional[str] = None  # Optional - AI will generate if empty
     introduction: Optional[str] = None  # Optional - AI will generate if empty
     highlight: Optional[str] = None  # Optional - AI will generate if empty
@@ -130,7 +132,9 @@ class SocialPost(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SocialPostGenerate(BaseModel):
-    website_link: str
+    website_link: Optional[str] = None
+    website_content: Optional[str] = None
+    source_type: str = "url"
     title: Optional[str] = None
     introduction: Optional[str] = None
     highlight: Optional[str] = None
