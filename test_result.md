@@ -293,6 +293,28 @@ backend:
           - Output giờ là 1 bài viết hoàn chỉnh, sẵn sàng post
           - Backend restart thành công
           - Cần testing để verify format output mới
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ĐÃ THÊM CUSTOM PRESET CHO SOCIAL CONTENT - Tương tự translate preset:
+          - Backend changes:
+            • Thêm field custom_preset vào SocialGenerateRequest model
+            • Update endpoint /api/projects/{project_id}/social xử lý custom_preset
+            • Logic: Nếu có custom_preset, thêm vào prompt như "YÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG"
+          - Frontend changes:
+            • Thêm state customPresetSocial
+            • Thêm Textarea "Custom Preset Social (Tùy chọn)" trong AI Control Panel
+            • Textarea nằm sau nút Translate, trước nút Generate Social
+            • Có border-top để ngăn cách visual với phần translate
+            • Helper text: "Hướng dẫn này sẽ được kết hợp với preset tạo social content mặc định"
+            • Pass custom_preset vào API call
+          - UI/UX:
+            • Consistent design với Custom Preset translate
+            • Clear separation giữa 2 preset areas
+            • min-h-[100px] cho textarea
+          - Backend restart thành công
+          - Frontend build successful
+          - Cần testing để verify custom preset social hoạt động đúng
 
   - task: "Web scraping và download images từ URL"
     implemented: true
