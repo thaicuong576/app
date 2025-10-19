@@ -227,17 +227,17 @@ const CreateProject = () => {
               data-testid="submit-create-btn"
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full mt-6 h-12 text-base bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all"
+              className="w-full mt-6 h-12 text-base bg-[#E38400] hover:bg-[#C67300] text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Creating Project...
+                  Đang tạo project...
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Create Project
+                  Tạo Project
                 </>
               )}
             </Button>
