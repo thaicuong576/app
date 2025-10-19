@@ -257,6 +257,24 @@ backend:
           - Content được lưu vào facebook field chính xác
           - Database update thành công
           - Preset casual "ok giờ đọc bài đó..." hoạt động tự nhiên và hiệu quả
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ĐÃ THÊM PRESET MỚI VỚI 3 EXAMPLES - Enhanced social content generation:
+          - Thêm 3 ví dụ chi tiết từ Partner (mới).pdf:
+            • Example 1: SP1 Hypercube - ZK rollups proving trong 12 giây
+            • Example 2: Succinct marketplace - ZK Proof với token $PROVE
+            • Example 3: BitVM - ZK Proof trên Bitcoin với BLAKE3
+          - Mỗi example có structure đầy đủ:
+            • Tiêu đề kỹ thuật rõ ràng
+            • Nội dung chính với context và insight
+            • Question để engage độc giả
+            • CTA về GFI Research với link cụ thể
+          - Combined với preset cũ để AI học cả 2 styles
+          - Outline rõ ràng: Tiêu đề → Nội dung chính (insight) → Dẫn về bài gốc
+          - Vẫn giữ yêu cầu: góc nhìn thứ ba, không shill, ~100 từ
+          - Backend restart thành công
+          - Cần testing với bài viết crypto để verify output quality
 
   - task: "Web scraping và download images từ URL"
     implemented: true
