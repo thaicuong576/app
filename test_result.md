@@ -180,6 +180,16 @@ backend:
           - Văn phong báo VN chuyên nghiệp, không shill
           - Database update thành công
           - Format mới đáp ứng ĐÚNG YÊU CẦU của user về cấu trúc output
+      - working: true
+        agent: "main"
+        comment: |
+          ✅ ĐÃ SỬA LỖI MARKDOWN CODE BLOCKS - Loại bỏ ```html và ``` từ output:
+          - Thêm logic clean up trong backend translate endpoint
+          - Tự động strip ```html từ đầu response
+          - Tự động strip ``` từ đầu và cuối response
+          - HTML content giờ hiển thị đúng với heading format
+          - Không còn hiển thị markdown syntax trong output
+          - Backend restart thành công
 
   - task: "API endpoint để tạo nội dung social media"
     implemented: true
