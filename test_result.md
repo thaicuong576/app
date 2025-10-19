@@ -315,6 +315,25 @@ backend:
           - Backend restart thành công
           - Frontend build successful
           - Cần testing để verify custom preset social hoạt động đúng
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ĐÃ THÊM EMOJIS VÀ FULL LINKS VÀO EXAMPLES - Hoàn thiện preset theo file gốc:
+          - Cập nhật cả 3 examples với emojis chính xác từ Partner (mới).txt:
+            • Example 1 (SP1 Hypercube): 🔥 (tiêu đề), 🙂 (nội dung), ➡️ (CTA)
+            • Example 2 (Succinct): 🤔 (tiêu đề), ➡️ (nội dung), 🤔 (question), ➡️ (CTA)
+            • Example 3 (BitVM): 🔥 (tiêu đề), 🎯 (nội dung), ➡️ (CTA)
+          - Thêm FULL URLs vào tất cả CTAs:
+            • SP1 Hypercube: https://gfiresearch.net/sp1-hypercube-zkvm-cho-phep-tao-bang-chung-ethereum-trong-thoi-gian-thuc
+            • Succinct: https://gfiresearch.net/kien-truc-mang-luoi-succinct-va-token-prove
+            • BitVM: https://gfiresearch.net/succinct-mo-ra-kha-nang-xac-minh-zk-proof-tren-bitcoin-thong-qua-bitvm
+          - Cập nhật YÊU CẦU FORMAT OUTPUT:
+            • Thêm hướng dẫn sử dụng emojis: 🔥 🤔 (tiêu đề), 🙂 ➡️ 🎯 (nội dung)
+            • Yêu cầu 2-3 emojis tổng cộng (không lạm dụng)
+            • Luôn có emoji ➡️ và link đầy đủ trong CTA
+            • Emojis sử dụng tự nhiên, phù hợp context
+          - Backend restart thành công
+          - Preset giờ đầy đủ 100% theo file gốc của user
 
   - task: "Web scraping và download images từ URL"
     implemented: true
