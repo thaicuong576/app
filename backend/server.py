@@ -425,18 +425,30 @@ Nội dung:
         user_message = UserMessage(text=prompt)
         response = await chat.send_message(user_message)
         
+        # Clean up markdown code blocks if present
+        cleaned_response = response.strip()
+        if cleaned_response.startswith('```html'):
+            cleaned_response = cleaned_response[7:]  # Remove ```html
+        elif cleaned_response.startswith('```'):
+            cleaned_response = cleaned_response[3:]  # Remove ```
+        
+        if cleaned_response.endswith('```'):
+            cleaned_response = cleaned_response[:-3]  # Remove trailing ```
+        
+        cleaned_response = cleaned_response.strip()
+        
         # Update database
         await db.projects.update_one(
             {"id": project_id},
             {
                 "$set": {
-                    "translated_content": response,
+                    "translated_content": cleaned_response,
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
             }
         )
         
-        return {"translated_content": response}
+        return {"translated_content": cleaned_response}
     
     except Exception as e:
         logging.error(f"Translation error: {e}")
