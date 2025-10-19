@@ -512,14 +512,14 @@ Việc tạo Zero-Knowledge Proof hiện vẫn đòi hỏi cơ sở hạ tầng 
 
 Đọc phân tích chi tiết về kiến trúc của Succinct tại ➡️ Kiến trúc Mạng lưới Succinct và token $PROVE (https://gfiresearch.net/kien-truc-mang-luoi-succinct-va-token-prove)
 
-Example 3 - Bài về BitVM (format đúng):
-Bitcoin Script và bài toán ứng dụng phức tạp: Liệu ZK Proof có là lời giải?
+Example 3 - Bài về BitVM (format đúng với emojis):
+🔥 Bitcoin Script và bài toán ứng dụng phức tạp: Liệu ZK Proof có là lời giải?
 
 Bitcoin Script (Ngôn ngữ lập trình của Bitcoin) được thiết kế không hoàn chỉnh về tính toán để tối ưu bảo mật, nhưng điều này cũng hạn chế khả năng xây dựng các ứng dụng phức tạp như rollup hay bridge phi tín nhiệm trên Bitcoin.
 
-BitVM đang thử nghiệm cách tiếp cận mới bằng việc xác minh tính toán thay vì thực thi trực tiếp. Điểm kỹ thuật đáng chú ý là BLAKE3 chỉ cần 7 vòng nén so với 64 vòng của SHA256, giúp giảm đáng kể chi phí xác minh ZK Proof trên Bitcoin Script. Một số dự án như Alpen Labs (ZK rollup), Babylon (bridge phi tín nhiệm) đang thử nghiệm mô hình này. Liệu cách tiếp cận này có đủ hiệu quả và bảo mật cho ứng dụng thực tế?
+🎯 BitVM đang thử nghiệm cách tiếp cận mới bằng việc xác minh tính toán thay vì thực thi trực tiếp. Điểm kỹ thuật đáng chú ý là BLAKE3 chỉ cần 7 vòng nén so với 64 vòng của SHA256, giúp giảm đáng kể chi phí xác minh ZK Proof trên Bitcoin Script. Một số dự án như Alpen Labs (ZK rollup), Babylon (bridge phi tín nhiệm) đang thử nghiệm mô hình này. Tuy nhiên, liệu cách tiếp cận này có đủ hiệu quả và bảo mật cho ứng dụng thực tế?
 
-Cùng GFI tìm hiểu chi tiết về hướng tiếp cận kĩ thuật của Succinct tại Succinct mở ra khả năng xác minh ZK Proof trên Bitcoin thông qua BitVM
+Cùng GFI tìm hiểu chi tiết về hướng tiếp cận kĩ thuật của Succinct tại ➡️ Succinct mở ra khả năng xác minh ZK Proof trên Bitcoin thông qua BitVM (https://gfiresearch.net/succinct-mo-ra-kha-nang-xac-minh-zk-proof-tren-bitcoin-thong-qua-bitvm)
 
 ---
 
