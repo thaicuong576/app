@@ -160,23 +160,23 @@ const CreateProject = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-[#004154] via-[#005568] to-[#003844] py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <Button
           variant="ghost"
           onClick={() => navigate('/partner-content-hub')}
-          className="mb-6 hover:bg-white/50"
+          className="mb-6 hover:bg-white/10 text-white"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
+          Quay lại Dashboard
         </Button>
 
-        <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-2xl">
+        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-              Create New Project
+            <CardTitle className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              Tạo Project Mới
             </CardTitle>
-            <CardDescription>Start by providing a URL or pasting your content</CardDescription>
+            <CardDescription>Bắt đầu bằng cách cung cấp URL hoặc paste nội dung</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={inputType} onValueChange={setInputType} className="w-full">
