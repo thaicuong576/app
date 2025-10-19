@@ -468,14 +468,23 @@ async def generate_social_content(project_id: str, request: SocialGenerateReques
         # Combined preset with examples from Partner (mới).pdf
         prompt = f"""ok giờ đọc bài đó và hãy viết bài post telegram ngắn cho tôi nhé, khoảng 100 từ thôi, theo outline sau: title dẫn dắt các vấn đề hiện tại của thị trường sau đó giới thiệu 1 phần nội dung có insight (ngắn, sao cho đừng quá shill dự án) kết luận và CTA về bài GFI Research gốc
 
+YÊU CẦU FORMAT OUTPUT:
+- Viết thành 1 bài post liền mạch, KHÔNG CÓ labels như "Tiêu đề:", "Nội dung:", "CTA:"
+- Dòng đầu tiên: Tiêu đề của bài (không cần label)
+- Sau đó xuống dòng và viết nội dung chính
+- Nội dung chính chia thành 2 đoạn văn (mỗi đoạn cân đối độ dài), ngăn cách bởi 1 dòng trống
+- Đoạn cuối: CTA về GFI Research với mention link
+- Tổng cộng: Tiêu đề + 2 đoạn nội dung + 1 đoạn CTA
+
 OUTLINE CỦA BÀI POST:
-- Tiêu đề
-- Nội dung chính (với insight)
-- Dẫn về bài viết gốc
+- Tiêu đề (dòng đầu)
+- Nội dung chính đoạn 1 (context và vấn đề)
+- Nội dung chính đoạn 2 (insight và detail kỹ thuật)
+- CTA về bài viết gốc GFI Research
 
 Lưu ý: Viết với góc nhìn thứ ba, không shill dự án
 
-VÍ DỤ THAM KHẢO (3 examples):
+VÍ DỤ THAM KHẢO (3 examples với format mới):
 
 Example 1 - Bài về SP1 Hypercube:
 Tạo bằng chứng khối Ethereum chỉ trong 12 giây: Bài toán tốc độ cho ZK rollups
