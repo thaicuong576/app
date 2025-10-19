@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Globe, Sparkles, Copy, Trash2, Edit2, Home as HomeIcon, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Globe, Sparkles, Copy, Trash2, Edit2, Home as HomeIcon, FileText, Link as LinkIcon } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -17,7 +18,9 @@ const SocialToWebsite = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [sourceType, setSourceType] = useState('url'); // 'url' or 'text'
   const [websiteLink, setWebsiteLink] = useState('');
+  const [websiteContent, setWebsiteContent] = useState(''); // For text input
   const [title, setTitle] = useState('');
   const [introduction, setIntroduction] = useState('');
   const [highlight, setHighlight] = useState('');
