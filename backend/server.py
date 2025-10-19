@@ -1050,7 +1050,9 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
         if website_content:
             user_message_parts.append(f"NỘI DUNG TỪ WEBSITE:\n{website_content[:3000]}")
         
-        user_message_parts.append(f"\nLINK WEBSITE: {request.website_link}")
+        # Add link if provided
+        if request.website_link:
+            user_message_parts.append(f"\nLINK WEBSITE: {request.website_link}")
         
         # Add user inputs if provided
         if request.title:
