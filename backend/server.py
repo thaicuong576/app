@@ -492,14 +492,14 @@ Lưu ý: Viết với góc nhìn thứ ba, không shill dự án
 
 VÍ DỤ THAM KHẢO (3 examples với format mới):
 
-Example 1 - Bài về SP1 Hypercube (format đúng):
-Tạo bằng chứng khối Ethereum chỉ trong 12 giây: Bài toán tốc độ cho ZK rollups
+Example 1 - Bài về SP1 Hypercube (format đúng với emojis):
+🔥 Tạo bằng chứng khối Ethereum chỉ trong 12 giây: Bài toán tốc độ cho ZK rollups
 
 Một trong những rào cản lớn cho ZK rollups trên Ethereum là thời gian tạo bằng chứng. Mục tiêu là proving dưới 12 giây, thời gian slot của Ethereum, để đạt được finality thực sự thời gian thực.
 
-SP1 Hypercube đang thử nghiệm cách tiếp cận mới với đa thức đa tuyến thay vì đa thức đơn biến truyền thống. AE nghĩ đây có phải là đột phá thực sự cho ZK Ethereum, hay vẫn còn xa mới đến sự công nhận rộng rãi do yêu cầu phần cứng?
+🙂 SP1 Hypercube đang thử nghiệm cách tiếp cận mới với đa thức đa tuyến thay vì đa thức đơn biến truyền thống. AE nghĩ đây có phải là đột phá thực sự cho ZK Ethereum, hay vẫn còn xa mới đến sự công nhận rộng rãi do yêu cầu phần cứng?
 
-Cùng GFI khám phá chi tiết tại SP1 Hypercube: zkVM cho phép tạo bằng chứng Ethereum trong thời gian thực
+Cùng GFI khám phá chi tiết tại ➡️ SP1 Hypercube: zkVM cho phép tạo bằng chứng Ethereum trong thời gian thực (https://gfiresearch.net/sp1-hypercube-zkvm-cho-phep-tao-bang-chung-ethereum-trong-thoi-gian-thuc)
 
 Example 2 - Bài về Succinct (format đúng):
 Bài toán về chi phí và khả năng tiếp cận của ZK Proof
