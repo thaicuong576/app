@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://md-news-generator.preview.emergentagent.com/api"
+BASE_URL = "https://hubtext-clean.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 # Sample English crypto content for testing
