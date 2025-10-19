@@ -176,19 +176,50 @@ const SocialToWebsite = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Website Link */}
-              <div>
-                <Label>Link Website GFI Research <span className="text-red-500">*</span></Label>
-                <Input
-                  placeholder="https://gfiresearch.net/..."
-                  value={websiteLink}
-                  onChange={(e) => setWebsiteLink(e.target.value)}
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  🌐 Link bài phân tích chi tiết trên website
-                </p>
-              </div>
+              {/* Source Type Tabs */}
+              <Tabs value={sourceType} onValueChange={setSourceType}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="url">
+                    <LinkIcon className="h-4 w-4 mr-2" />
+                    URL
+                  </TabsTrigger>
+                  <TabsTrigger value="text">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Text
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="url" className="space-y-4 mt-4">
+                  <div>
+                    <Label>Link Website GFI Research <span className="text-red-500">*</span></Label>
+                    <Input
+                      placeholder="https://gfiresearch.net/..."
+                      value={websiteLink}
+                      onChange={(e) => setWebsiteLink(e.target.value)}
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      🌐 AI sẽ tự động cào nội dung từ URL
+                    </p>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="text" className="space-y-4 mt-4">
+                  <div>
+                    <Label>Nội dung từ Website <span className="text-red-500">*</span></Label>
+                    <Textarea
+                      placeholder="Paste nội dung bài viết từ GFI Research..."
+                      value={websiteContent}
+                      onChange={(e) => setWebsiteContent(e.target.value)}
+                      rows={8}
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      📝 Paste toàn bộ nội dung bài phân tích
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
 
               {/* Title Field */}
               <div>
