@@ -275,6 +275,24 @@ backend:
           - Vẫn giữ yêu cầu: góc nhìn thứ ba, không shill, ~100 từ
           - Backend restart thành công
           - Cần testing với bài viết crypto để verify output quality
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ĐÃ SỬA FORMAT OUTPUT - Bỏ labels, viết thành bài post liền mạch:
+          - LOẠI BỎ hoàn toàn các labels: "Tiêu đề:", "Nội dung:", "CTA:"
+          - Format mới:
+            • Dòng 1: Tiêu đề (không label)
+            • Dòng trống
+            • Đoạn 1: Context và vấn đề (cân đối độ dài)
+            • Dòng trống
+            • Đoạn 2: Insight và detail kỹ thuật (cân đối độ dài)
+            • Dòng trống
+            • Đoạn CTA: Link về GFI Research
+          - Tổng cộng: 1 tiêu đề + 2 đoạn nội dung + 1 đoạn CTA
+          - Cập nhật cả 3 examples theo format mới
+          - Output giờ là 1 bài viết hoàn chỉnh, sẵn sàng post
+          - Backend restart thành công
+          - Cần testing để verify format output mới
 
   - task: "Web scraping và download images từ URL"
     implemented: true
