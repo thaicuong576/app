@@ -49,15 +49,22 @@ const SocialToWebsite = () => {
   };
 
   const handleGenerate = async () => {
-    if (!websiteLink.trim()) {
+    // Check based on source type
+    if (sourceType === 'url' && !websiteLink.trim()) {
       toast.error('Vui lòng nhập link website');
+      return;
+    }
+    if (sourceType === 'text' && !websiteContent.trim()) {
+      toast.error('Vui lòng nhập nội dung website');
       return;
     }
 
     setGenerating(true);
     try {
       const response = await axios.post(`${API}/social-posts/generate`, {
-        website_link: websiteLink,
+        website_link: sourceType === 'url' ? websiteLink : null,
+        website_content: sourceType === 'text' ? websiteContent : null,
+        source_type: sourceType,
         title: title || null,
         introduction: introduction || null,
         highlight: highlight || null
@@ -73,6 +80,7 @@ const SocialToWebsite = () => {
       
       // Clear inputs
       setWebsiteLink('');
+      setWebsiteContent('');
       setTitle('');
       setIntroduction('');
       setHighlight('');
