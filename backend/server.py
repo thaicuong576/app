@@ -501,14 +501,16 @@ Một trong những rào cản lớn cho ZK rollups trên Ethereum là thời gi
 
 Cùng GFI khám phá chi tiết tại ➡️ SP1 Hypercube: zkVM cho phép tạo bằng chứng Ethereum trong thời gian thực (https://gfiresearch.net/sp1-hypercube-zkvm-cho-phep-tao-bang-chung-ethereum-trong-thoi-gian-thuc)
 
-Example 2 - Bài về Succinct (format đúng):
-Bài toán về chi phí và khả năng tiếp cận của ZK Proof
+Example 2 - Bài về Succinct (format đúng với emojis):
+🤔 Bài toán về chi phí và khả năng tiếp cận của ZK Proof
 
 Việc tạo Zero-Knowledge Proof hiện vẫn đòi hỏi cơ sở hạ tầng phức tạp và chi phí cao, hạn chế khả năng áp dụng rộng rãi. Các dự án thường phải tự vận hành prover hoặc phụ thuộc vào nhà cung cấp tập trung.
 
-Vì vậy, Succinct đang thử nghiệm mô hình marketplace hai chiều, kết nối người cần ZK proof với prover thông qua đấu giá. Điểm đáng chú ý là kiến trúc tách biệt: auctioneer off-chain cho tốc độ cao, settlement on-chain Ethereum cho bảo mật. Token $PROVE vừa là phương tiện thanh toán, vừa làm cơ chế staking để ràng buộc trách nhiệm prover. Liệu mô hình marketplace này có tạo ra thị trường ZK proof hiệu quả hơn?
+➡️ Vì vậy, Succinct đang thử nghiệm mô hình marketplace hai chiều, kết nối người cần ZK proof với prover thông qua đấu giá. Điểm đáng chú ý là kiến trúc tách biệt: auctioneer off-chain cho tốc độ cao, settlement on-chain Ethereum cho bảo mật. Token $PROVE vừa là phương tiện thanh toán, vừa làm cơ chế staking để ràng buộc trách nhiệm prover.
 
-Đọc phân tích chi tiết về kiến trúc của Succinct tại Kiến trúc Mạng lưới Succinct và token $PROVE
+🤔 Liệu mô hình marketplace này có tạo ra thị trường ZK proof hiệu quả hơn, hay vẫn chỉ phù hợp cho một số use case nhất định?
+
+Đọc phân tích chi tiết về kiến trúc của Succinct tại ➡️ Kiến trúc Mạng lưới Succinct và token $PROVE (https://gfiresearch.net/kien-truc-mang-luoi-succinct-va-token-prove)
 
 Example 3 - Bài về BitVM (format đúng):
 Bitcoin Script và bài toán ứng dụng phức tạp: Liệu ZK Proof có là lời giải?
