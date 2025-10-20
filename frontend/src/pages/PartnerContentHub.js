@@ -352,6 +352,49 @@ const Workshop = () => {
     toast.success(`${label} copied!`);
   };
 
+
+  const handleDownloadImage = async (imageUrl, filename) => {
+    try {
+      // Use our backend proxy to download the image with custom filename
+      const downloadUrl = `${API}/download-image?url=${encodeURIComponent(imageUrl)}&filename=${encodeURIComponent(filename)}`;
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success(`Đang tải ${filename}`);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      toast.error('Lỗi khi tải hình ảnh');
+    }
+  };
+
+  const handleDownloadAllImages = async () => {
+    if (!project?.image_metadata || project.image_metadata.length === 0) {
+      toast.error('Không có hình ảnh để tải');
+      return;
+    }
+
+    toast.info(`Đang tải ${project.image_metadata.length} hình ảnh...`);
+    
+    // Download each image with a small delay to avoid overwhelming the browser
+    for (let i = 0; i < project.image_metadata.length; i++) {
+      const img = project.image_metadata[i];
+      await handleDownloadImage(img.url, img.filename);
+      
+      // Add delay between downloads
+      if (i < project.image_metadata.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    toast.success(`Đã tải xong ${project.image_metadata.length} hình ảnh!`);
+  };
+
   const handleDeleteProject = async () => {
     if (!window.confirm('Bạn có chắc muốn xóa project này không?')) {
       return;
