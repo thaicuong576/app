@@ -191,46 +191,80 @@ def remove_vietnamese_accents(text: str) -> str:
     text = ''.join(char for char in text if unicodedata.category(char) != 'Mn')
     return text
 
-async def translate_to_vietnamese_slug(text: str) -> str:
-    """Translate English text to Vietnamese and convert to slug format"""
+async def batch_translate_to_vietnamese_slugs(texts: List[str]) -> List[str]:
+    """Batch translate multiple English texts to Vietnamese slug format in one API call"""
+    if not texts:
+        return []
+    
     try:
-        # Use Gemini to translate
+        # Use Gemini to translate all texts in one call
         llm = LlmChat(
             api_key=os.getenv('GOOGLE_API_KEY'),
-            session_id=f"translate_slug_{uuid.uuid4().hex[:8]}",
+            session_id=f"batch_translate_{uuid.uuid4().hex[:8]}",
             system_message="You are a translator. Translate English to simple, natural Vietnamese."
         ).with_model("gemini", "gemini-2.0-flash-exp")
         
-        prompt = f"Translate this to Vietnamese (simple, natural translation): {text}\n\nOnly return the Vietnamese translation, nothing else."
+        # Create numbered list for batch translation
+        numbered_texts = "\n".join([f"{i+1}. {text}" for i, text in enumerate(texts)])
+        
+        prompt = f"""Translate these {len(texts)} English texts to Vietnamese (simple, natural translation).
+Return ONLY the Vietnamese translations, one per line, numbered 1-{len(texts)}.
+Do NOT add explanations or extra text.
+
+{numbered_texts}"""
         
         user_message = UserMessage(text=prompt)
         response_obj = await llm.send_message(user_message)
-        vietnamese_text = response_obj.strip()
+        response_text = response_obj.strip()
         
-        # Remove accents
-        no_accent = remove_vietnamese_accents(vietnamese_text)
+        # Parse response - extract translations
+        translations = []
+        lines = response_text.split('\n')
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            # Remove numbering (e.g., "1. ", "2. ", etc.)
+            translation = re.sub(r'^\d+\.\s*', '', line)
+            if translation:
+                translations.append(translation)
         
-        # Convert to lowercase
-        no_accent = no_accent.lower()
+        # If we didn't get enough translations, pad with originals
+        while len(translations) < len(texts):
+            translations.append(texts[len(translations)])
         
-        # Replace spaces and special characters with hyphens
-        slug = re.sub(r'[^a-z0-9]+', '-', no_accent)
+        # Convert each translation to slug
+        slugs = []
+        for vietnamese_text in translations[:len(texts)]:
+            # Remove accents
+            no_accent = remove_vietnamese_accents(vietnamese_text)
+            
+            # Convert to lowercase
+            no_accent = no_accent.lower()
+            
+            # Replace spaces and special characters with hyphens
+            slug = re.sub(r'[^a-z0-9]+', '-', no_accent)
+            
+            # Remove leading/trailing hyphens
+            slug = slug.strip('-')
+            
+            # Remove consecutive hyphens
+            slug = re.sub(r'-+', '-', slug)
+            
+            slugs.append(slug)
         
-        # Remove leading/trailing hyphens
-        slug = slug.strip('-')
-        
-        # Remove consecutive hyphens
-        slug = re.sub(r'-+', '-', slug)
-        
-        return slug
+        return slugs
     except Exception as e:
-        logging.error(f"Error translating text: {e}")
-        # Fallback: just convert English to slug
-        no_accent = text.lower()
-        slug = re.sub(r'[^a-z0-9]+', '-', no_accent)
-        slug = slug.strip('-')
-        slug = re.sub(r'-+', '-', slug)
-        return slug
+        logging.error(f"Error batch translating texts: {e}")
+        # Fallback: convert English to slugs
+        slugs = []
+        for text in texts:
+            no_accent = text.lower()
+            slug = re.sub(r'[^a-z0-9]+', '-', no_accent)
+            slug = slug.strip('-')
+            slug = re.sub(r'-+', '-', slug)
+            slugs.append(slug)
+        return slugs
 
 async def scrape_content(url: str, project_id: str) -> Dict:
     """Scrape content from URL and download images"""
