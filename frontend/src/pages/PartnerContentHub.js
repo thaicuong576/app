@@ -112,11 +112,21 @@ const Dashboard = () => {
               <Card
                 key={project.id}
                 data-testid={`project-card-${project.id}`}
-                className="cursor-pointer hover:shadow-2xl transition-all bg-white/95 backdrop-blur-sm border-0 hover:scale-105 transform"
+                className="cursor-pointer hover:shadow-2xl transition-all bg-white/95 backdrop-blur-sm border-0 hover:scale-105 transform relative"
                 onClick={() => navigate(`/partner-content-hub/workshop/${project.id}`)}
               >
+                {/* Delete Button - Absolute positioned */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 z-10"
+                  onClick={(e) => handleDeleteProject(project.id, e)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold text-gray-900 line-clamp-2">
+                  <CardTitle className="text-xl font-bold text-gray-900 line-clamp-2 pr-10">
                     {project.title}
                   </CardTitle>
                   <CardDescription className="flex items-center text-sm">
