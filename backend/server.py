@@ -183,6 +183,51 @@ async def download_image(image_url: str, project_id: str) -> Optional[str]:
         logging.error(f"Error downloading image {image_url}: {e}")
         return None
 
+def remove_vietnamese_accents(text: str) -> str:
+    """Remove Vietnamese accents from text"""
+    # Normalize unicode characters
+    text = unicodedata.normalize('NFD', text)
+    # Remove combining characters (accents)
+    text = ''.join(char for char in text if unicodedata.category(char) != 'Mn')
+    return text
+
+def translate_to_vietnamese_slug(text: str) -> str:
+    """Translate English text to Vietnamese and convert to slug format"""
+    try:
+        # Use Gemini to translate
+        llm = LlmChat()
+        messages = [
+            UserMessage(content=f"Translate this to Vietnamese (simple, natural translation): {text}\n\nOnly return the Vietnamese translation, nothing else.")
+        ]
+        
+        response = llm.chat(messages=messages, model="gemini-2.0-flash-exp", max_tokens=100)
+        vietnamese_text = response.content.strip()
+        
+        # Remove accents
+        no_accent = remove_vietnamese_accents(vietnamese_text)
+        
+        # Convert to lowercase
+        no_accent = no_accent.lower()
+        
+        # Replace spaces and special characters with hyphens
+        slug = re.sub(r'[^a-z0-9]+', '-', no_accent)
+        
+        # Remove leading/trailing hyphens
+        slug = slug.strip('-')
+        
+        # Remove consecutive hyphens
+        slug = re.sub(r'-+', '-', slug)
+        
+        return slug
+    except Exception as e:
+        logging.error(f"Error translating text: {e}")
+        # Fallback: just convert English to slug
+        no_accent = text.lower()
+        slug = re.sub(r'[^a-z0-9]+', '-', no_accent)
+        slug = slug.strip('-')
+        slug = re.sub(r'-+', '-', slug)
+        return slug
+
 async def scrape_content(url: str, project_id: str) -> Dict:
     """Scrape content from URL and download images"""
     try:
