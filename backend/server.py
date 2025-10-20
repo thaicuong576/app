@@ -390,6 +390,38 @@ async def delete_project(project_id: str):
     
     return {"message": "Project deleted successfully", "id": project_id}
 
+@api_router.get("/download-image")
+async def download_image_proxy(url: str, filename: str):
+    """Proxy endpoint to download images from external URLs with custom filename"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=15, stream=True)
+        response.raise_for_status()
+        
+        # Get content type
+        content_type = response.headers.get('content-type', 'image/jpeg')
+        
+        # Return streaming response with custom filename
+        from fastapi.responses import StreamingResponse
+        
+        def iterfile():
+            for chunk in response.iter_content(chunk_size=8192):
+                yield chunk
+        
+        return StreamingResponse(
+            iterfile(),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error downloading image from {url}: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to download image: {str(e)}")
+
+
 @api_router.post("/projects/{project_id}/translate")
 async def translate_content(project_id: str, request: TranslateRequest):
     """Translate and restructure content using Gemini with user's preset prompt"""
