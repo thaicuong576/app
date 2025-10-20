@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, FileText, Link as LinkIcon, Sparkles, Share2, Copy, ArrowLeft, Home as HomeIcon, Trash2 } from "lucide-react";
+import { Loader2, FileText, Link as LinkIcon, Sparkles, Share2, Copy, ArrowLeft, Home as HomeIcon, Trash2, Download, Image as ImageIcon } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
