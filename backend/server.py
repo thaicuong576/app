@@ -216,62 +216,85 @@ async def scrape_content(url: str, project_id: str) -> Dict:
         images_downloaded = []
         
         if content:
-            # Find where title appears in content to start from there
-            title_element = content.find(['h1', 'h2'], string=lambda text: text and title_text.lower() in text.lower())
+            # Strategy: Get ALL images in main content area, then filter out unwanted ones
+            img_tags = content.find_all('img')
             
-            # If title found, get all images after it; otherwise get all images in content
-            if title_element:
-                # Get all siblings after title
-                images_container = title_element.find_parent()
-                img_tags = []
-                for elem in title_element.find_all_next():
-                    if elem.name == 'img':
-                        img_tags.append(elem)
-            else:
-                # Get all images in main content
-                img_tags = content.find_all('img')
+            # Also check for featured/hero image that might be in a figure before article
+            # Look for common patterns: .featured-image, .hero-image, .post-image, figure.gh-article-image
+            for parent_tag in ['figure', 'div']:
+                for class_pattern in ['featured', 'hero', 'post-image', 'article-image', 'gh-article-image']:
+                    featured_imgs = soup_copy.find_all(parent_tag, class_=lambda x: x and class_pattern in str(x).lower())
+                    for featured_container in featured_imgs:
+                        for img in featured_container.find_all('img'):
+                            if img not in img_tags:  # Avoid duplicates
+                                img_tags.append(img)
             
+            # Filter out small images (likely icons, logos) by checking if they have meaningful content
             # Process each image
             for idx, img in enumerate(img_tags):
                 src = img.get('src') or img.get('data-src')
-                if src:
-                    # Make absolute URL
-                    absolute_url = urljoin(url, src)
+                if not src:
+                    continue
+                
+                # Skip if image is in navigation, header, footer (check parent classes)
+                skip = False
+                for parent in img.parents:
+                    parent_class = ' '.join(parent.get('class', [])).lower() if parent.get('class') else ''
+                    parent_tag = parent.name if parent.name else ''
                     
-                    # Get alt text
-                    alt_text = img.get('alt', '').strip()
-                    if not alt_text:
-                        alt_text = img.get('title', '').strip()
-                    if not alt_text:
-                        alt_text = f"image-{idx+1}"
+                    # Skip if in these containers
+                    if any(term in parent_class for term in ['nav', 'menu', 'header', 'footer', 'sidebar', 'widget']):
+                        skip = True
+                        break
+                    if parent_tag in ['nav', 'header', 'footer']:
+                        skip = True
+                        break
+                
+                # Skip author/profile images (usually small avatars)
+                img_class = ' '.join(img.get('class', [])).lower() if img.get('class') else ''
+                if any(term in img_class for term in ['avatar', 'profile', 'author-image']):
+                    skip = True
+                
+                if skip:
+                    continue
                     
-                    # Clean alt text for filename (remove special characters)
-                    clean_alt = "".join(c for c in alt_text if c.isalnum() or c in (' ', '-', '_')).strip()
-                    if not clean_alt:
-                        clean_alt = f"image-{idx+1}"
-                    
-                    # Get file extension from URL
-                    parsed_url = urlparse(absolute_url)
-                    ext = parsed_url.path.split('.')[-1] if '.' in parsed_url.path else 'jpg'
-                    # Ensure valid image extension
-                    if ext.lower() not in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']:
-                        ext = 'jpg'
-                    
-                    # Create filename with "Succinct" prefix
-                    filename = f"Succinct {clean_alt}.{ext}"
-                    
-                    # Store metadata
-                    image_metadata.append({
-                        'url': absolute_url,
-                        'alt_text': alt_text,
-                        'filename': filename
-                    })
-                    
-                    # Download image for preview (keep old logic)
-                    local_path = await download_image(absolute_url, project_id)
-                    if local_path:
-                        img['src'] = local_path
-                        images_downloaded.append(local_path)
+                # Make absolute URL
+                absolute_url = urljoin(url, src)
+                
+                # Get alt text
+                alt_text = img.get('alt', '').strip()
+                if not alt_text:
+                    alt_text = img.get('title', '').strip()
+                if not alt_text:
+                    alt_text = f"image-{idx+1}"
+                
+                # Clean alt text for filename (remove special characters)
+                clean_alt = "".join(c for c in alt_text if c.isalnum() or c in (' ', '-', '_')).strip()
+                if not clean_alt:
+                    clean_alt = f"image-{idx+1}"
+                
+                # Get file extension from URL
+                parsed_url = urlparse(absolute_url)
+                ext = parsed_url.path.split('.')[-1] if '.' in parsed_url.path else 'jpg'
+                # Ensure valid image extension
+                if ext.lower() not in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']:
+                    ext = 'jpg'
+                
+                # Create filename with "Succinct" prefix
+                filename = f"Succinct {clean_alt}.{ext}"
+                
+                # Store metadata
+                image_metadata.append({
+                    'url': absolute_url,
+                    'alt_text': alt_text,
+                    'filename': filename
+                })
+                
+                # Download image for preview (keep old logic)
+                local_path = await download_image(absolute_url, project_id)
+                if local_path:
+                    img['src'] = local_path
+                    images_downloaded.append(local_path)
         
         # Get HTML content
         html_content = str(content) if content else ""
