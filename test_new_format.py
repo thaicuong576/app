@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://content-sharing-hub-1.preview.emergentagent.com/api"
+BASE_URL = "https://content-img-sync.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 def print_test_header(test_name):
