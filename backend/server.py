@@ -307,7 +307,7 @@ async def scrape_content(url: str, project_id: str) -> Dict:
                 alt_text = f"image-{len(image_metadata)+1}"
             
             # Translate alt text to Vietnamese slug format
-            vietnamese_slug = translate_to_vietnamese_slug(alt_text)
+            vietnamese_slug = await translate_to_vietnamese_slug(alt_text)
             
             # Create filename with Vietnamese slug (always .jpg)
             filename = f"{vietnamese_slug}.jpg"
