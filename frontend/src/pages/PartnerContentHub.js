@@ -36,6 +36,25 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteProject = async (projectId, e) => {
+    // Stop propagation to prevent card click
+    e.stopPropagation();
+    
+    if (!window.confirm('Bạn có chắc muốn xóa project này không?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/projects/${projectId}`);
+      toast.success('Project đã được xóa');
+      // Reload projects list
+      loadProjects();
+    } catch (error) {
+      console.error('Delete project error:', error);
+      toast.error('Không thể xóa project');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#004154] via-[#005568] to-[#003844]">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
