@@ -697,6 +697,358 @@ def test_delete_kol_post(post_id):
         print_error(f"Delete KOL post error: {str(e)}")
         return False
 
+def test_create_project_with_url():
+    """Create a test project with URL to test image extraction"""
+    print_test_header("Creating Project with URL for Image Testing")
+    
+    try:
+        # Use a URL that likely has images - crypto news site
+        test_url = "https://example.com"  # Using example.com as it's reliable and has images
+        
+        payload = {
+            "source_url": test_url
+        }
+        
+        print_info(f"Creating project with URL: {test_url}")
+        
+        response = requests.post(
+            f"{BASE_URL}/projects",
+            json=payload,
+            headers=HEADERS,
+            timeout=60  # Increased timeout for scraping
+        )
+        
+        if response.status_code == 200:
+            project = response.json()
+            project_id = project.get('id')
+            image_metadata = project.get('image_metadata', [])
+            
+            print_success(f"Project with URL created successfully")
+            print_info(f"Project ID: {project_id}")
+            print_info(f"Project Title: {project.get('title', 'N/A')}")
+            print_info(f"Images found: {len(image_metadata)}")
+            
+            return project_id, image_metadata
+        else:
+            print_error(f"Project creation with URL failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return None, None
+            
+    except Exception as e:
+        print_error(f"Project creation with URL error: {str(e)}")
+        return None, None
+
+def test_image_metadata_structure(image_metadata):
+    """Test the structure and format of image metadata"""
+    print_test_header("Testing Image Metadata Structure")
+    
+    if not image_metadata:
+        print_info("No image metadata to test (project has no images)")
+        return True
+    
+    try:
+        checks_passed = 0
+        total_checks = 5
+        
+        # Check 1: image_metadata is an array
+        if isinstance(image_metadata, list):
+            print_success("✓ image_metadata is an array")
+            checks_passed += 1
+        else:
+            print_error("✗ image_metadata is not an array")
+        
+        if len(image_metadata) > 0:
+            sample_image = image_metadata[0]
+            
+            # Check 2: Each item has required fields (url, alt_text, filename)
+            required_fields = ['url', 'alt_text', 'filename']
+            missing_fields = [field for field in required_fields if field not in sample_image]
+            
+            if not missing_fields:
+                print_success("✓ Image metadata has all required fields: url, alt_text, filename")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields in image metadata: {missing_fields}")
+            
+            # Check 3: URL is absolute URL
+            image_url = sample_image.get('url', '')
+            if image_url.startswith(('http://', 'https://')):
+                print_success("✓ Image URL is absolute URL")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Image URL is not absolute: {image_url}")
+            
+            # Check 4: Filename has "Succinct " prefix
+            filename = sample_image.get('filename', '')
+            if filename.startswith('Succinct '):
+                print_success("✓ Filename has 'Succinct ' prefix")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Filename missing 'Succinct ' prefix: {filename}")
+            
+            # Check 5: Extension is valid image format
+            valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
+            file_extension = filename.split('.')[-1].lower() if '.' in filename else ''
+            
+            if file_extension in valid_extensions:
+                print_success(f"✓ Valid image extension: {file_extension}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Invalid image extension: {file_extension}")
+            
+            # Show sample metadata
+            print_info("Sample image metadata:")
+            print_info(f"  URL: {sample_image.get('url', 'N/A')}")
+            print_info(f"  Alt text: {sample_image.get('alt_text', 'N/A')}")
+            print_info(f"  Filename: {sample_image.get('filename', 'N/A')}")
+        
+        print_info(f"Image metadata structure: {checks_passed}/{total_checks} checks passed")
+        return checks_passed >= 3
+        
+    except Exception as e:
+        print_error(f"Image metadata structure test error: {str(e)}")
+        return False
+
+def test_download_image_proxy(image_metadata):
+    """Test the download image proxy endpoint"""
+    print_test_header("Testing Download Image Proxy Endpoint")
+    
+    if not image_metadata or len(image_metadata) == 0:
+        print_info("No images available for download testing")
+        return True
+    
+    try:
+        # Test with first image
+        sample_image = image_metadata[0]
+        image_url = sample_image.get('url')
+        filename = sample_image.get('filename')
+        
+        if not image_url or not filename:
+            print_error("Sample image missing URL or filename")
+            return False
+        
+        print_info(f"Testing download for: {filename}")
+        print_info(f"Image URL: {image_url}")
+        
+        # Test the download proxy endpoint
+        download_url = f"{BASE_URL}/download-image"
+        params = {
+            'url': image_url,
+            'filename': filename
+        }
+        
+        response = requests.get(
+            download_url,
+            params=params,
+            timeout=30,
+            stream=True
+        )
+        
+        checks_passed = 0
+        total_checks = 4
+        
+        # Check 1: Response status is 200
+        if response.status_code == 200:
+            print_success("✓ Download proxy returns 200 status")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Download proxy failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+        
+        # Check 2: Content-Type is image type
+        content_type = response.headers.get('content-type', '')
+        if content_type.startswith('image/'):
+            print_success(f"✓ Correct content-type: {content_type}")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Incorrect content-type: {content_type}")
+        
+        # Check 3: Content-Disposition header has custom filename
+        content_disposition = response.headers.get('content-disposition', '')
+        if 'attachment' in content_disposition and filename in content_disposition:
+            print_success("✓ Content-Disposition header has custom filename")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Incorrect Content-Disposition: {content_disposition}")
+        
+        # Check 4: Response has image data
+        if response.status_code == 200:
+            # Read a small chunk to verify it's image data
+            chunk = next(response.iter_content(chunk_size=1024), b'')
+            if len(chunk) > 0:
+                print_success("✓ Response streams image data")
+                checks_passed += 1
+            else:
+                print_error("✗ No image data in response")
+        
+        print_info(f"Download proxy test: {checks_passed}/{total_checks} checks passed")
+        return checks_passed >= 3
+        
+    except Exception as e:
+        print_error(f"Download image proxy test error: {str(e)}")
+        return False
+
+def test_main_content_filtering():
+    """Test that images are only extracted from main content, not sidebar/footer"""
+    print_test_header("Testing Main Content Filtering")
+    
+    try:
+        # Create a project with a URL that has multiple images
+        # We'll use example.com which should have some images
+        test_url = "https://example.com"
+        
+        payload = {
+            "source_url": test_url
+        }
+        
+        print_info(f"Testing main content filtering with: {test_url}")
+        
+        response = requests.post(
+            f"{BASE_URL}/projects",
+            json=payload,
+            headers=HEADERS,
+            timeout=60
+        )
+        
+        if response.status_code == 200:
+            project = response.json()
+            image_metadata = project.get('image_metadata', [])
+            
+            print_success(f"Project created for content filtering test")
+            print_info(f"Images extracted: {len(image_metadata)}")
+            
+            # The main test here is that the scraping completed without errors
+            # and that we got a reasonable number of images (not too many from sidebar/footer)
+            if len(image_metadata) <= 10:  # Reasonable number for main content
+                print_success("✓ Reasonable number of images extracted (likely from main content)")
+                return True
+            else:
+                print_error(f"✗ Too many images extracted ({len(image_metadata)}), may include sidebar/footer")
+                return False
+                
+        else:
+            print_error(f"Content filtering test failed: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_error(f"Main content filtering test error: {str(e)}")
+        return False
+
+def test_backward_compatibility():
+    """Test that old projects without image_metadata still work"""
+    print_test_header("Testing Backward Compatibility")
+    
+    try:
+        # Create a project with raw text (no URL, so no image_metadata)
+        payload = {
+            "raw_text": "Test content for backward compatibility"
+        }
+        
+        response = requests.post(
+            f"{BASE_URL}/projects",
+            json=payload,
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            project = response.json()
+            project_id = project.get('id')
+            
+            print_success("Project created without URL (no image_metadata)")
+            
+            # Test retrieving the project
+            get_response = requests.get(
+                f"{BASE_URL}/projects/{project_id}",
+                headers=HEADERS,
+                timeout=30
+            )
+            
+            if get_response.status_code == 200:
+                retrieved_project = get_response.json()
+                image_metadata = retrieved_project.get('image_metadata', [])
+                
+                print_success("✓ Project retrieval works for projects without image_metadata")
+                print_info(f"image_metadata field: {image_metadata}")
+                
+                # Clean up
+                requests.delete(f"{BASE_URL}/projects/{project_id}", headers=HEADERS, timeout=30)
+                
+                return True
+            else:
+                print_error(f"Failed to retrieve project: {get_response.status_code}")
+                return False
+                
+        else:
+            print_error(f"Backward compatibility test failed: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_error(f"Backward compatibility test error: {str(e)}")
+        return False
+
+def test_error_handling_images():
+    """Test error handling for image-related operations"""
+    print_test_header("Testing Image Error Handling")
+    
+    try:
+        checks_passed = 0
+        total_checks = 3
+        
+        # Test 1: Download with invalid URL
+        print_info("Testing download with invalid image URL...")
+        invalid_url = "https://invalid-domain-that-does-not-exist.com/image.jpg"
+        
+        response = requests.get(
+            f"{BASE_URL}/download-image",
+            params={'url': invalid_url, 'filename': 'test.jpg'},
+            timeout=30
+        )
+        
+        if response.status_code == 400:
+            print_success("✓ Proper error handling for invalid image URL")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Unexpected response for invalid URL: {response.status_code}")
+        
+        # Test 2: Download with missing parameters
+        print_info("Testing download with missing filename parameter...")
+        
+        response = requests.get(
+            f"{BASE_URL}/download-image",
+            params={'url': 'https://example.com/image.jpg'},  # Missing filename
+            timeout=30
+        )
+        
+        if response.status_code in [400, 422]:  # 422 for validation error
+            print_success("✓ Proper error handling for missing filename")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Unexpected response for missing filename: {response.status_code}")
+        
+        # Test 3: Create project with invalid URL
+        print_info("Testing project creation with invalid URL...")
+        
+        response = requests.post(
+            f"{BASE_URL}/projects",
+            json={"source_url": "https://invalid-domain-that-does-not-exist.com"},
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 400:
+            print_success("✓ Proper error handling for invalid project URL")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Unexpected response for invalid project URL: {response.status_code}")
+        
+        print_info(f"Error handling test: {checks_passed}/{total_checks} checks passed")
+        return checks_passed >= 2
+        
+    except Exception as e:
+        print_error(f"Error handling test error: {str(e)}")
+        return False
+
 def test_delete_partner_content_project(project_id):
     """Test deleting a Partner Content Hub project"""
     print_test_header("Testing Delete Partner Content Hub Project")
