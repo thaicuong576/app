@@ -199,13 +199,13 @@ def translate_to_vietnamese_slug(text: str) -> str:
             api_key=os.getenv('GOOGLE_API_KEY'),
             session_id=f"translate_slug_{uuid.uuid4().hex[:8]}",
             system_message="You are a translator. Translate English to simple, natural Vietnamese."
-        )
-        messages = [
-            UserMessage(content=f"Translate this to Vietnamese (simple, natural translation): {text}\n\nOnly return the Vietnamese translation, nothing else.")
-        ]
+        ).with_model("gemini", "gemini-2.0-flash-exp")
         
-        response = llm.chat(messages=messages, model="gemini-2.0-flash-exp", max_tokens=100)
-        vietnamese_text = response.content.strip()
+        prompt = f"Translate this to Vietnamese (simple, natural translation): {text}\n\nOnly return the Vietnamese translation, nothing else."
+        
+        user_message = UserMessage(text=prompt)
+        response_obj = asyncio.run(llm.send_message(user_message))
+        vietnamese_text = response_obj.strip()
         
         # Remove accents
         no_accent = remove_vietnamese_accents(vietnamese_text)
