@@ -338,14 +338,90 @@ backend:
   - task: "Web scraping và download images từ URL"
     implemented: true
     working: "NA"
-    file: "/app/backend/server.py"
+    file: "/app/backend/server.py, /app/frontend/src/pages/PartnerContentHub.js"
     stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Tính năng hiện có từ trước, không thay đổi"
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ĐÃ THÊM IMAGE EXTRACTION & DOWNLOAD FEATURE cho Partner Content Hub:
+          
+          BACKEND CHANGES:
+          1. Models & Database:
+             - Thêm ImageMetadata model với fields: url, alt_text, filename
+             - Update Project model: thêm field image_metadata: List[ImageMetadata]
+             - Backward compatible với field images (List[str]) cũ
+          
+          2. Enhanced Scraping Logic (scrape_content function):
+             - Extract images CHỈ từ main content area (article, main, .content, etc.)
+             - Detect title position và lấy images từ title trở xuống
+             - LOẠI BỎ images từ: nav, footer, header, sidebar, recommended articles
+             - Intelligent alt text extraction:
+               • Ưu tiên: img alt attribute
+               • Fallback: img title attribute
+               • Default: "image-{index}" nếu không có
+             - Filename format: "Succinct {clean_alt_text}.{ext}"
+               • Clean alt text: remove special characters, keep alphanumeric + space/dash/underscore
+               • Auto-detect image extension từ URL
+               • Fallback: .jpg nếu không detect được
+             - Lưu image metadata array vào database
+          
+          3. Download API Endpoint:
+             - New endpoint: GET /api/download-image?url={imageUrl}&filename={filename}
+             - Proxy download để bypass CORS issues
+             - Stream response với custom filename in Content-Disposition header
+             - Support all image formats: jpg, jpeg, png, gif, webp, svg
+          
+          FRONTEND CHANGES:
+          1. New Images Section in Workshop:
+             - Conditional render: chỉ hiển thị nếu có image_metadata
+             - Position: Sau translated content, trước social modal
+             - Card layout với title "📷 Hình ảnh từ bài gốc"
+             - Hiển thị số lượng images extracted
+          
+          2. Images Grid Display:
+             - Responsive grid: 1 column (mobile), 2 columns (tablet), 3 columns (desktop)
+             - Mỗi image card có:
+               • Thumbnail preview (aspect-video, object-cover)
+               • Image error fallback (SVG placeholder)
+               • Filename display (truncate with tooltip)
+               • Alt text display (nếu có và khác default)
+               • Download button (orange theme #E38400)
+          
+          3. Download Functionality:
+             - handleDownloadImage: Download single image
+               • Sử dụng backend proxy API
+               • Create temporary <a> element để trigger download
+               • Filename được preserve chính xác
+               • Toast notification
+             - handleDownloadAllImages: Download tất cả images
+               • Sequential download với 500ms delay giữa mỗi file
+               • Prevent browser overwhelming
+               • Progress toasts (start → success)
+          
+          4. UI/UX Details:
+             - Icons: ImageIcon (header), Download (buttons)
+             - Color scheme: Orange (#E38400) matching Partner Content Hub brand
+             - Hover effects: Border color change to orange
+             - Responsive design: Mobile-friendly grid
+             - Error handling: Image load failures, download errors
+          
+          ⚠️ CẦN TESTING:
+          1. Test với URL có nhiều images (news articles, blog posts)
+          2. Verify chỉ lấy images trong main content (không lấy sidebar/footer)
+          3. Check filename format: "Succinct {alt_text}.ext"
+          4. Test download single image
+          5. Test download all images
+          6. Verify images với missing alt text (fallback to "image-{index}")
+          7. Test với các định dạng ảnh khác nhau: jpg, png, webp, svg
+          8. Check responsive layout trên mobile/tablet/desktop
+          9. Test error handling: broken image URLs, download failures
+          10. Verify backward compatibility: projects cũ không có image_metadata vẫn hoạt động
 
   - task: "CRUD operations cho projects"
     implemented: true
