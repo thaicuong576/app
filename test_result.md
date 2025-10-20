@@ -681,6 +681,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Web scraping và download images từ URL"
     - "News Generator Feature - Backend API"
     - "News Generator Feature - Frontend UI"
   stuck_tasks: []
