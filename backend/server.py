@@ -302,20 +302,11 @@ async def scrape_content(url: str, project_id: str) -> Dict:
             if not alt_text:
                 alt_text = f"image-{len(image_metadata)+1}"
             
-            # Clean alt text for filename (remove special characters)
-            clean_alt = "".join(c for c in alt_text if c.isalnum() or c in (' ', '-', '_')).strip()
-            if not clean_alt:
-                clean_alt = f"image-{len(image_metadata)+1}"
+            # Translate alt text to Vietnamese slug format
+            vietnamese_slug = translate_to_vietnamese_slug(alt_text)
             
-            # Get file extension from URL
-            parsed_url = urlparse(absolute_url)
-            ext = parsed_url.path.split('.')[-1] if '.' in parsed_url.path else 'jpg'
-            # Ensure valid image extension
-            if ext.lower() not in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']:
-                ext = 'jpg'
-            
-            # Create filename with "Succinct" prefix
-            filename = f"Succinct {clean_alt}.{ext}"
+            # Create filename with Vietnamese slug (always .jpg)
+            filename = f"{vietnamese_slug}.jpg"
             
             # Store metadata
             image_metadata.append({
