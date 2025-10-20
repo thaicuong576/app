@@ -191,7 +191,7 @@ def remove_vietnamese_accents(text: str) -> str:
     text = ''.join(char for char in text if unicodedata.category(char) != 'Mn')
     return text
 
-def translate_to_vietnamese_slug(text: str) -> str:
+async def translate_to_vietnamese_slug(text: str) -> str:
     """Translate English text to Vietnamese and convert to slug format"""
     try:
         # Use Gemini to translate
@@ -204,7 +204,7 @@ def translate_to_vietnamese_slug(text: str) -> str:
         prompt = f"Translate this to Vietnamese (simple, natural translation): {text}\n\nOnly return the Vietnamese translation, nothing else."
         
         user_message = UserMessage(text=prompt)
-        response_obj = asyncio.run(llm.send_message(user_message))
+        response_obj = await llm.send_message(user_message)
         vietnamese_text = response_obj.strip()
         
         # Remove accents
