@@ -269,6 +269,9 @@ const Workshop = () => {
   const loadProject = async () => {
     try {
       const response = await axios.get(`${API}/projects/${projectId}`);
+      console.log('🔍 DEBUG - Project data:', response.data);
+      console.log('🔍 DEBUG - image_metadata:', response.data.image_metadata);
+      console.log('🔍 DEBUG - image_metadata length:', response.data.image_metadata?.length);
       setProject(response.data);
       setContent(response.data.translated_content || response.data.original_content);
       setSocialContent(response.data.social_content);
