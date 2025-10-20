@@ -282,7 +282,7 @@ async def scrape_content(url: str, project_id: str) -> Dict:
         title_text = title.get_text().strip() if title else "Untitled"
         
         # FIRST: Extract images BEFORE removing elements
-        image_metadata = []
+        image_data_list = []  # Store temp image data
         images_downloaded = []
         
         # Find all images in the page
@@ -338,23 +338,32 @@ async def scrape_content(url: str, project_id: str) -> Dict:
             if not alt_text:
                 alt_text = img.get('title', '').strip()
             if not alt_text:
-                alt_text = f"image-{len(image_metadata)+1}"
+                alt_text = f"image-{len(image_data_list)+1}"
             
-            # Translate alt text to Vietnamese slug format
-            vietnamese_slug = await translate_to_vietnamese_slug(alt_text)
-            
-            # Create filename with Vietnamese slug (always .jpg)
+            # Store temp data
+            image_data_list.append({
+                'url': absolute_url,
+                'alt_text': alt_text
+            })
+        
+        # BATCH TRANSLATE all alt texts at once (much faster!)
+        alt_texts = [img['alt_text'] for img in image_data_list]
+        vietnamese_slugs = await batch_translate_to_vietnamese_slugs(alt_texts)
+        
+        # Now create final metadata with translated filenames
+        image_metadata = []
+        for i, img_data in enumerate(image_data_list):
+            vietnamese_slug = vietnamese_slugs[i] if i < len(vietnamese_slugs) else img_data['alt_text'].lower()
             filename = f"{vietnamese_slug}.jpg"
             
-            # Store metadata
             image_metadata.append({
-                'url': absolute_url,
-                'alt_text': alt_text,
+                'url': img_data['url'],
+                'alt_text': img_data['alt_text'],
                 'filename': filename
             })
             
             # Download image for preview
-            local_path = await download_image(absolute_url, project_id)
+            local_path = await download_image(img_data['url'], project_id)
             if local_path:
                 images_downloaded.append(local_path)
         
