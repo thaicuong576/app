@@ -531,6 +531,71 @@ const Workshop = () => {
             </Card>
           </div>
         </div>
+
+        {/* Images Section - Only show if images exist */}
+        {project?.image_metadata && project.image_metadata.length > 0 && (
+          <div className="mt-8">
+            <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                  <ImageIcon className="h-6 w-6 mr-2 text-[#E38400]" />
+                  📷 Hình ảnh từ bài gốc
+                </CardTitle>
+                <CardDescription>
+                  {project.image_metadata.length} hình ảnh được trích xuất từ nội dung chính
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {project.image_metadata.map((img, index) => (
+                    <div key={index} className="border border-slate-200 rounded-lg p-4 hover:border-[#E38400] transition-colors">
+                      <div className="aspect-video bg-slate-100 rounded-md mb-3 flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={img.url} 
+                          alt={img.alt_text}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect fill="%23f1f5f9" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dominant-baseline="middle" fill="%2394a3b8" font-family="sans-serif" font-size="14"%3ENo Preview%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-slate-700 truncate" title={img.filename}>
+                          {img.filename}
+                        </p>
+                        {img.alt_text && img.alt_text !== `image-${index+1}` && (
+                          <p className="text-xs text-slate-500 line-clamp-2">
+                            Alt: {img.alt_text}
+                          </p>
+                        )}
+                        <Button
+                          onClick={() => handleDownloadImage(img.url, img.filename)}
+                          size="sm"
+                          className="w-full bg-[#E38400] hover:bg-[#C67200] text-white"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Tải xuống
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Download All Button */}
+                <div className="mt-6 flex justify-center">
+                  <Button
+                    onClick={handleDownloadAllImages}
+                    className="bg-gradient-to-r from-[#E38400] to-[#C67200] hover:from-[#C67200] hover:to-[#A85F00] text-white shadow-lg"
+                  >
+                    <Download className="h-5 w-5 mr-2" />
+                    Tải tất cả hình ảnh ({project.image_metadata.length})
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       {/* Social Content Modal */}
