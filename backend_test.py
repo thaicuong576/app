@@ -703,7 +703,7 @@ def test_create_project_with_url():
     
     try:
         # Use a URL that likely has images - crypto news site
-        test_url = "https://example.com"  # Using example.com as it's reliable and has images
+        test_url = "https://coindesk.com"  # Using coindesk as it's reliable and has images
         
         payload = {
             "source_url": test_url
