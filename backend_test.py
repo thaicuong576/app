@@ -894,8 +894,8 @@ def test_main_content_filtering():
     
     try:
         # Create a project with a URL that has multiple images
-        # We'll use example.com which should have some images
-        test_url = "https://example.com"
+        # We'll use coindesk which should have some images
+        test_url = "https://coindesk.com"
         
         payload = {
             "source_url": test_url
