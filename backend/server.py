@@ -196,30 +196,78 @@ async def scrape_content(url: str, project_id: str) -> Dict:
         title = soup.find('title')
         title_text = title.get_text().strip() if title else "Untitled"
         
-        # Remove script and style elements
-        for script in soup(["script", "style", "nav", "footer", "header"]):
+        # Remove script and style elements from soup copy for content extraction
+        soup_copy = BeautifulSoup(str(soup), 'html.parser')
+        for script in soup_copy(["script", "style", "nav", "footer", "header"]):
             script.decompose()
         
         # Find main content (try common content containers)
         content = None
         for selector in ['article', 'main', '.content', '#content', '.post-content', '.entry-content']:
-            content = soup.select_one(selector)
+            content = soup_copy.select_one(selector)
             if content:
                 break
         
         if not content:
-            content = soup.find('body')
+            content = soup_copy.find('body')
         
-        # Download images and replace URLs
+        # Extract images from main content ONLY (from title onwards)
+        image_metadata = []
         images_downloaded = []
+        
         if content:
-            img_tags = content.find_all('img')
-            for img in img_tags:
+            # Find where title appears in content to start from there
+            title_element = content.find(['h1', 'h2'], string=lambda text: text and title_text.lower() in text.lower())
+            
+            # If title found, get all images after it; otherwise get all images in content
+            if title_element:
+                # Get all siblings after title
+                images_container = title_element.find_parent()
+                img_tags = []
+                for elem in title_element.find_all_next():
+                    if elem.name == 'img':
+                        img_tags.append(elem)
+            else:
+                # Get all images in main content
+                img_tags = content.find_all('img')
+            
+            # Process each image
+            for idx, img in enumerate(img_tags):
                 src = img.get('src') or img.get('data-src')
                 if src:
                     # Make absolute URL
                     absolute_url = urljoin(url, src)
-                    # Download image
+                    
+                    # Get alt text
+                    alt_text = img.get('alt', '').strip()
+                    if not alt_text:
+                        alt_text = img.get('title', '').strip()
+                    if not alt_text:
+                        alt_text = f"image-{idx+1}"
+                    
+                    # Clean alt text for filename (remove special characters)
+                    clean_alt = "".join(c for c in alt_text if c.isalnum() or c in (' ', '-', '_')).strip()
+                    if not clean_alt:
+                        clean_alt = f"image-{idx+1}"
+                    
+                    # Get file extension from URL
+                    parsed_url = urlparse(absolute_url)
+                    ext = parsed_url.path.split('.')[-1] if '.' in parsed_url.path else 'jpg'
+                    # Ensure valid image extension
+                    if ext.lower() not in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']:
+                        ext = 'jpg'
+                    
+                    # Create filename with "Succinct" prefix
+                    filename = f"Succinct {clean_alt}.{ext}"
+                    
+                    # Store metadata
+                    image_metadata.append({
+                        'url': absolute_url,
+                        'alt_text': alt_text,
+                        'filename': filename
+                    })
+                    
+                    # Download image for preview (keep old logic)
                     local_path = await download_image(absolute_url, project_id)
                     if local_path:
                         img['src'] = local_path
@@ -231,7 +279,8 @@ async def scrape_content(url: str, project_id: str) -> Dict:
         return {
             'title': title_text,
             'content': html_content,
-            'images': images_downloaded
+            'images': images_downloaded,
+            'image_metadata': image_metadata
         }
     except Exception as e:
         logging.error(f"Error scraping {url}: {e}")
