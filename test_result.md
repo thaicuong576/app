@@ -1046,4 +1046,79 @@ agent_communication:
       7. Test delete news
       8. Kiểm tra opinion field influence
       9. Check emojis usage (🔥 🤔 👉 ➡️ 😅)
+
+  - agent: "main"
+    message: |
+      🎉 IMAGE EXTRACTION & DOWNLOAD FEATURE HOÀN THÀNH - Partner Content Hub Enhancement!
+      
+      ✅ USER REQUEST:
+      - Lấy ảnh từ URL bài viết gốc (CHỈ từ main content, không lấy sidebar/recommended)
+      - Xuất ảnh cùng với nội dung đã dịch
+      - Section riêng dưới output, hiển thị tất cả images
+      - Tên file format: "Succinct + {alt_text}.{ext}"
+      - Khi download: giữ nguyên tên file đã format
+      - Áp dụng cho Partner Content Hub
+      
+      ✅ BACKEND IMPLEMENTATION:
+      1. Enhanced Data Models:
+         - ImageMetadata model: url, alt_text, filename
+         - Project model: thêm image_metadata field (backward compatible)
+      
+      2. Smart Image Extraction:
+         - Detect main content area (article, main, .content, .post-content)
+         - Find title position → extract images từ title trở xuống
+         - Filter out: nav, footer, header, sidebar, aside elements
+         - Extract metadata: image URL + alt text + title
+         - Auto-generate clean filename: "Succinct {clean_alt}.{ext}"
+      
+      3. Download Proxy API:
+         - New endpoint: GET /api/download-image
+         - Bypass CORS issues
+         - Custom filename in Content-Disposition header
+         - Support streaming response
+      
+      ✅ FRONTEND IMPLEMENTATION:
+      1. Images Section UI:
+         - Conditional render (chỉ hiển thị nếu có images)
+         - Position: Dưới translated content section
+         - Card layout với header "📷 Hình ảnh từ bài gốc"
+         - Display số lượng images extracted
+      
+      2. Image Grid Display:
+         - Responsive: 1/2/3 columns (mobile/tablet/desktop)
+         - Each card: thumbnail + filename + alt text + download button
+         - Image preview với error fallback
+         - Hover effects (orange border)
+      
+      3. Download Features:
+         - Single image download: Click button → download với tên format
+         - Download All: Sequential download tất cả images (500ms delay)
+         - Toast notifications
+         - Error handling
+      
+      🎯 KEY FEATURES:
+      - ✓ Chỉ lấy images từ MAIN CONTENT (từ title trở xuống)
+      - ✓ Không lấy images từ sidebar/footer/recommended articles
+      - ✓ Filename format: "Succinct {alt_text}.ext"
+      - ✓ Download giữ nguyên tên đã format
+      - ✓ Support all image formats: jpg, png, webp, svg
+      - ✓ Responsive design
+      - ✓ Error handling (broken images, download failures)
+      - ✓ Backward compatible với projects cũ
+      
+      📊 STATUS:
+      - Backend: IMPLEMENTED ✓ (restart thành công)
+      - Frontend: IMPLEMENTED ✓ (build & restart thành công)
+      - Database: UPDATED ✓ (new field image_metadata)
+      
+      ⚠️ CẦN TESTING:
+      1. Test với URL thật (crypto news articles)
+      2. Verify chỉ lấy images trong main content
+      3. Check filename format chính xác
+      4. Test single download
+      5. Test download all
+      6. Test với các image formats khác nhau
+      7. Test responsive layout
+      8. Verify backward compatibility
+
       10. Verify 120-160 words length
