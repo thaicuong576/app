@@ -1117,6 +1117,12 @@ def main():
         'translation': False,
         'social_generation': False,
         'project_retrieval': False,
+        'project_with_url_creation': False,
+        'image_metadata_structure': False,
+        'download_image_proxy': False,
+        'main_content_filtering': False,
+        'backward_compatibility': False,
+        'image_error_handling': False,
         'kol_post_text_generation': False,
         'kol_post_url_generation': False,
         'get_all_kol_posts': False,
@@ -1131,7 +1137,7 @@ def main():
         print_error("API is not accessible. Stopping tests.")
         return False
     
-    # Test 2: Create Test Project
+    # Test 2: Create Test Project (with raw text)
     project_id = create_test_project()
     test_results['project_creation'] = project_id is not None
     if not project_id:
@@ -1151,32 +1157,58 @@ def main():
     # Test 5: Project Retrieval
     test_results['project_retrieval'] = test_project_retrieval(project_id)
     
+    # IMAGE EXTRACTION & DOWNLOAD TESTS
+    print_test_header("IMAGE EXTRACTION & DOWNLOAD FEATURE TESTING")
+    
+    # Test 6: Create Project with URL (for image extraction)
+    url_project_id, image_metadata = test_create_project_with_url()
+    test_results['project_with_url_creation'] = url_project_id is not None
+    
+    # Test 7: Image Metadata Structure
+    test_results['image_metadata_structure'] = test_image_metadata_structure(image_metadata)
+    
+    # Test 8: Download Image Proxy Endpoint
+    test_results['download_image_proxy'] = test_download_image_proxy(image_metadata)
+    
+    # Test 9: Main Content Filtering
+    test_results['main_content_filtering'] = test_main_content_filtering()
+    
+    # Test 10: Backward Compatibility
+    test_results['backward_compatibility'] = test_backward_compatibility()
+    
+    # Test 11: Image Error Handling
+    test_results['image_error_handling'] = test_error_handling_images()
+    
     # KOL POST TESTS
     print_test_header("KOL POST FEATURE TESTING")
     
-    # Test 6: KOL Post Generation with Text Input
+    # Test 12: KOL Post Generation with Text Input
     kol_post_id = test_kol_post_generation_text()
     test_results['kol_post_text_generation'] = kol_post_id is not None
     
-    # Test 7: KOL Post Generation with URL Input
+    # Test 13: KOL Post Generation with URL Input
     kol_post_url_id = test_kol_post_generation_url()
     test_results['kol_post_url_generation'] = kol_post_url_id is not None and kol_post_url_id != "url_failed"
     
-    # Test 8: Get All KOL Posts
+    # Test 14: Get All KOL Posts
     first_post_id = test_get_all_kol_posts()
     test_results['get_all_kol_posts'] = first_post_id is not None
     
     # Use the first available post ID for single post and delete tests
     test_post_id = kol_post_id or first_post_id
     
-    # Test 9: Get Single KOL Post
+    # Test 15: Get Single KOL Post
     test_results['get_single_kol_post'] = test_get_single_kol_post(test_post_id)
     
-    # Test 10: Delete KOL Post
+    # Test 16: Delete KOL Post
     test_results['delete_kol_post'] = test_delete_kol_post(test_post_id)
     
-    # Test 11: Delete Partner Content Hub Project
+    # Test 17: Delete Partner Content Hub Project
     test_results['delete_partner_project'] = test_delete_partner_content_project(project_id)
+    
+    # Clean up URL project if created
+    if url_project_id:
+        test_delete_partner_content_project(url_project_id)
     
     # Summary
     print_test_header("TEST SUMMARY")
@@ -1186,6 +1218,13 @@ def main():
     print("PARTNER CONTENT HUB TESTS:")
     partner_tests = ['api_health', 'project_creation', 'translation', 'social_generation', 'project_retrieval', 'delete_partner_project']
     for test_name in partner_tests:
+        result = test_results[test_name]
+        status = "✅ PASS" if result else "❌ FAIL"
+        print(f"  {test_name.replace('_', ' ').title()}: {status}")
+    
+    print("\nIMAGE EXTRACTION & DOWNLOAD TESTS:")
+    image_tests = ['project_with_url_creation', 'image_metadata_structure', 'download_image_proxy', 'main_content_filtering', 'backward_compatibility', 'image_error_handling']
+    for test_name in image_tests:
         result = test_results[test_name]
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"  {test_name.replace('_', ' ').title()}: {status}")
@@ -1201,9 +1240,11 @@ def main():
     
     # Detailed analysis
     partner_passed = sum(test_results[test] for test in partner_tests)
+    image_passed = sum(test_results[test] for test in image_tests)
     kol_passed = sum(test_results[test] for test in kol_tests)
     
     print(f"Partner Content Hub: {partner_passed}/{len(partner_tests)} tests passed")
+    print(f"Image Extraction & Download: {image_passed}/{len(image_tests)} tests passed")
     print(f"KOL Post Feature: {kol_passed}/{len(kol_tests)} tests passed")
     
     if passed_tests == total_tests:
