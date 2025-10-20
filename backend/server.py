@@ -195,7 +195,11 @@ def translate_to_vietnamese_slug(text: str) -> str:
     """Translate English text to Vietnamese and convert to slug format"""
     try:
         # Use Gemini to translate
-        llm = LlmChat()
+        llm = LlmChat(
+            api_key=os.getenv('GOOGLE_API_KEY'),
+            session_id=f"translate_slug_{uuid.uuid4().hex[:8]}",
+            system_message="You are a translator. Translate English to simple, natural Vietnamese."
+        )
         messages = [
             UserMessage(content=f"Translate this to Vietnamese (simple, natural translation): {text}\n\nOnly return the Vietnamese translation, nothing else.")
         ]
