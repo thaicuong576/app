@@ -305,6 +305,7 @@ async def create_project(input: ProjectCreate):
             'source_url': input.source_url,
             'original_content': scraped_data['content'],
             'images': scraped_data['images'],
+            'image_metadata': scraped_data.get('image_metadata', []),
             'created_at': datetime.now(timezone.utc),
             'updated_at': datetime.now(timezone.utc)
         }
@@ -315,6 +316,7 @@ async def create_project(input: ProjectCreate):
             'title': 'Untitled Project',
             'original_content': input.raw_text,
             'images': [],
+            'image_metadata': [],
             'created_at': datetime.now(timezone.utc),
             'updated_at': datetime.now(timezone.utc)
         }
