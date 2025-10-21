@@ -1474,7 +1474,7 @@ def test_playwright_integration():
 
 def main():
     """Run all backend tests"""
-    print("🚀 Partner Content Hub & KOL Post - Backend API Testing")
+    print("🚀 Partner Content Hub, KOL Post & Crypto News Feed - Backend API Testing")
     print(f"Testing against: {BASE_URL}")
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -1496,7 +1496,12 @@ def main():
         'get_all_kol_posts': False,
         'get_single_kol_post': False,
         'delete_kol_post': False,
-        'delete_partner_project': False
+        'delete_partner_project': False,
+        'crypto_news_crawl': False,
+        'get_cached_crypto_news': False,
+        'delete_crypto_news': False,
+        'crypto_news_error_handling': False,
+        'playwright_integration': False
     }
     
     # Test 1: API Health Check
