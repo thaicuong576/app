@@ -1629,16 +1629,25 @@ def main():
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"  {test_name.replace('_', ' ').title()}: {status}")
     
+    print("\nCRYPTO NEWS FEED TESTS:")
+    crypto_tests = ['crypto_news_crawl', 'get_cached_crypto_news', 'delete_crypto_news', 'crypto_news_error_handling', 'playwright_integration']
+    for test_name in crypto_tests:
+        result = test_results[test_name]
+        status = "✅ PASS" if result else "❌ FAIL"
+        print(f"  {test_name.replace('_', ' ').title()}: {status}")
+    
     print(f"\nOverall Result: {passed_tests}/{total_tests} tests passed")
     
     # Detailed analysis
     partner_passed = sum(test_results[test] for test in partner_tests)
     image_passed = sum(test_results[test] for test in image_tests)
     kol_passed = sum(test_results[test] for test in kol_tests)
+    crypto_passed = sum(test_results[test] for test in crypto_tests)
     
     print(f"Partner Content Hub: {partner_passed}/{len(partner_tests)} tests passed")
     print(f"Image Extraction & Download: {image_passed}/{len(image_tests)} tests passed")
     print(f"KOL Post Feature: {kol_passed}/{len(kol_tests)} tests passed")
+    print(f"Crypto News Feed: {crypto_passed}/{len(crypto_tests)} tests passed")
     
     if passed_tests == total_tests:
         print_success("🎉 All tests passed! Backend APIs are working correctly.")
