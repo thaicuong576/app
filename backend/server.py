@@ -1385,6 +1385,124 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
         logging.error(f"Social post generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Social post generation failed: {str(e)}")
 
+# ==================== CRYPTO NEWS FEED ENDPOINTS ====================
+
+async def crawl_cryptopanic_with_playwright() -> List[Dict]:
+    """Crawl latest news from CryptoPanic using Playwright"""
+    from playwright.async_api import async_playwright
+    
+    news_items = []
+    
+    try:
+        async with async_playwright() as p:
+            # Launch browser in headless mode
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            
+            # Navigate to CryptoPanic
+            await page.goto('https://cryptopanic.com/', wait_until='networkidle', timeout=30000)
+            
+            # Wait for news items to load
+            await page.wait_for_selector('.news-cell', timeout=10000)
+            
+            # Extract news items
+            news_elements = await page.query_selector_all('.news-cell')
+            
+            for element in news_elements[:20]:  # Get top 20 news items
+                try:
+                    # Extract title and URL
+                    title_elem = await element.query_selector('.title-text a')
+                    if title_elem:
+                        title = await title_elem.inner_text()
+                        url = await title_elem.get_attribute('href')
+                        
+                        # Make URL absolute if relative
+                        if url and not url.startswith('http'):
+                            url = f"https://cryptopanic.com{url}"
+                    else:
+                        continue
+                    
+                    # Extract source
+                    source = None
+                    source_elem = await element.query_selector('.source a')
+                    if source_elem:
+                        source = await source_elem.inner_text()
+                    
+                    # Extract published time
+                    published_time = None
+                    time_elem = await element.query_selector('.published-date')
+                    if time_elem:
+                        published_time = await time_elem.inner_text()
+                    
+                    # Extract votes
+                    votes = None
+                    votes_elem = await element.query_selector('.votes')
+                    if votes_elem:
+                        votes = await votes_elem.inner_text()
+                    
+                    news_items.append({
+                        'title': title.strip(),
+                        'url': url,
+                        'source': source.strip() if source else None,
+                        'published_time': published_time.strip() if published_time else None,
+                        'votes': votes.strip() if votes else None,
+                    })
+                    
+                except Exception as e:
+                    logging.error(f"Error extracting news item: {e}")
+                    continue
+            
+            await browser.close()
+            
+    except Exception as e:
+        logging.error(f"Playwright crawling error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to crawl CryptoPanic: {str(e)}")
+    
+    return news_items
+
+@api_router.get("/crypto-news/crawl")
+async def crawl_crypto_news():
+    """Crawl fresh news from CryptoPanic and save to database"""
+    try:
+        # Crawl news using Playwright
+        news_data = await crawl_cryptopanic_with_playwright()
+        
+        if not news_data:
+            raise HTTPException(status_code=404, detail="No news found")
+        
+        # Clear old news (optional - keep only latest crawl)
+        await db.crypto_news.delete_many({})
+        
+        # Save to database
+        news_objects = []
+        for item in news_data:
+            news = CryptoNews(**item)
+            await db.crypto_news.insert_one(news.dict())
+            news_objects.append(news)
+        
+        return {
+            "message": f"Successfully crawled {len(news_objects)} news items",
+            "news": news_objects
+        }
+    
+    except Exception as e:
+        logging.error(f"Crypto news crawl error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/crypto-news", response_model=List[CryptoNews])
+async def get_crypto_news():
+    """Get all crypto news from database"""
+    news_list = await db.crypto_news.find().sort("created_at", -1).to_list(100)
+    return [CryptoNews(**news) for news in news_list]
+
+@api_router.delete("/crypto-news/{news_id}")
+async def delete_crypto_news(news_id: str):
+    """Delete a specific news item"""
+    result = await db.crypto_news.delete_one({"id": news_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="News not found")
+    return {"message": "News deleted successfully"}
+
 # Include router
 app.include_router(api_router)
 
