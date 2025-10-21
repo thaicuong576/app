@@ -1104,6 +1104,374 @@ def test_delete_partner_content_project(project_id):
         print_error(f"Delete project error: {str(e)}")
         return False
 
+# ==================== CRYPTO NEWS FEED TESTS ====================
+
+def test_crypto_news_crawl():
+    """Test the Crypto News Feed crawl endpoint using Playwright"""
+    print_test_header("Testing Crypto News Crawl Endpoint")
+    
+    try:
+        print_info("Triggering Playwright crawl of CryptoPanic...")
+        print_info("⚠️  This may take 10-30 seconds due to browser launch and page load")
+        
+        start_time = time.time()
+        
+        response = requests.get(
+            f"{BASE_URL}/crypto-news/crawl",
+            headers=HEADERS,
+            timeout=60  # Increased timeout for Playwright operations
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            message = result.get('message', '')
+            news_items = result.get('news', [])
+            
+            print_success(f"Crawl completed in {processing_time:.2f} seconds")
+            print_info(f"Response message: {message}")
+            print_info(f"News items crawled: {len(news_items)}")
+            
+            # Verify crawl response structure
+            checks_passed = 0
+            total_checks = 6
+            
+            # Check 1: Response has message and news fields
+            if 'message' in result and 'news' in result:
+                print_success("✓ Response has correct structure (message + news)")
+                checks_passed += 1
+            else:
+                print_error("✗ Response missing required fields")
+            
+            # Check 2: News items exist
+            if len(news_items) > 0:
+                print_success(f"✓ Successfully crawled {len(news_items)} news items")
+                checks_passed += 1
+            else:
+                print_error("✗ No news items crawled")
+            
+            if len(news_items) > 0:
+                sample_news = news_items[0]
+                
+                # Check 3: News items have required fields
+                required_fields = ['id', 'title', 'url', 'created_at']
+                missing_fields = [field for field in required_fields if field not in sample_news]
+                
+                if not missing_fields:
+                    print_success("✓ News items have all required fields")
+                    checks_passed += 1
+                else:
+                    print_error(f"✗ Missing fields in news items: {missing_fields}")
+                
+                # Check 4: Title is not empty
+                title = sample_news.get('title', '')
+                if title and len(title.strip()) > 0:
+                    print_success("✓ News titles are not empty")
+                    checks_passed += 1
+                else:
+                    print_error("✗ News titles are empty")
+                
+                # Check 5: URL is valid format
+                url = sample_news.get('url', '')
+                if url and (url.startswith('http://') or url.startswith('https://')):
+                    print_success("✓ News URLs are valid format")
+                    checks_passed += 1
+                else:
+                    print_error(f"✗ Invalid URL format: {url}")
+                
+                # Check 6: Optional fields (source, published_time, votes) are present
+                optional_fields = ['source', 'published_time', 'votes']
+                present_optional = [field for field in optional_fields if sample_news.get(field)]
+                
+                if len(present_optional) >= 1:
+                    print_success(f"✓ Optional fields present: {', '.join(present_optional)}")
+                    checks_passed += 1
+                else:
+                    print_error("✗ No optional fields (source, published_time, votes) present")
+                
+                # Show sample news item
+                print_info("Sample crawled news item:")
+                print_info(f"  Title: {sample_news.get('title', 'N/A')}")
+                print_info(f"  URL: {sample_news.get('url', 'N/A')}")
+                print_info(f"  Source: {sample_news.get('source', 'N/A')}")
+                print_info(f"  Published: {sample_news.get('published_time', 'N/A')}")
+                print_info(f"  Votes: {sample_news.get('votes', 'N/A')}")
+            
+            print_info(f"Crawl endpoint quality: {checks_passed}/{total_checks} checks passed")
+            
+            return news_items if checks_passed >= 4 else None
+            
+        else:
+            print_error(f"Crawl endpoint failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return None
+            
+    except Exception as e:
+        print_error(f"Crypto news crawl test error: {str(e)}")
+        return None
+
+def test_get_cached_crypto_news():
+    """Test getting cached crypto news from database"""
+    print_test_header("Testing Get Cached Crypto News")
+    
+    try:
+        response = requests.get(
+            f"{BASE_URL}/crypto-news",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            news_list = response.json()
+            
+            print_success(f"Retrieved {len(news_list)} cached news items")
+            
+            checks_passed = 0
+            total_checks = 4
+            
+            # Check 1: Response is a list
+            if isinstance(news_list, list):
+                print_success("✓ Response is a list")
+                checks_passed += 1
+            else:
+                print_error("✗ Response is not a list")
+            
+            if len(news_list) > 0:
+                # Check 2: Items are sorted by created_at descending
+                if len(news_list) > 1:
+                    first_time = news_list[0].get('created_at', '')
+                    second_time = news_list[1].get('created_at', '')
+                    if first_time >= second_time:
+                        print_success("✓ News items sorted by created_at descending")
+                        checks_passed += 1
+                    else:
+                        print_error("✗ News items not properly sorted")
+                else:
+                    print_success("✓ Only one item, sorting not applicable")
+                    checks_passed += 1
+                
+                # Check 3: Items have CryptoNews model fields
+                sample_item = news_list[0]
+                model_fields = ['id', 'title', 'url', 'created_at']
+                missing_fields = [field for field in model_fields if field not in sample_item]
+                
+                if not missing_fields:
+                    print_success("✓ Items have all CryptoNews model fields")
+                    checks_passed += 1
+                else:
+                    print_error(f"✗ Missing model fields: {missing_fields}")
+                
+                # Check 4: Data consistency with crawl
+                title = sample_item.get('title', '')
+                url = sample_item.get('url', '')
+                
+                if title and url and url.startswith(('http://', 'https://')):
+                    print_success("✓ Data is consistent and valid")
+                    checks_passed += 1
+                else:
+                    print_error("✗ Data inconsistency detected")
+                
+                print_info("Sample cached news item:")
+                print_info(f"  ID: {sample_item.get('id', 'N/A')}")
+                print_info(f"  Title: {sample_item.get('title', 'N/A')[:50]}...")
+                print_info(f"  Source: {sample_item.get('source', 'N/A')}")
+                print_info(f"  Created: {sample_item.get('created_at', 'N/A')}")
+            else:
+                print_info("No cached news items found")
+                checks_passed += 2  # Skip sorting and data checks
+            
+            print_info(f"Cached news quality: {checks_passed}/{total_checks} checks passed")
+            
+            return news_list[0].get('id') if len(news_list) > 0 else None
+            
+        else:
+            print_error(f"Get cached news failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return None
+            
+    except Exception as e:
+        print_error(f"Get cached crypto news test error: {str(e)}")
+        return None
+
+def test_delete_crypto_news(news_id):
+    """Test deleting a specific crypto news item"""
+    print_test_header("Testing Delete Crypto News")
+    
+    if not news_id:
+        print_error("No news ID available for testing")
+        return False
+    
+    try:
+        print_info(f"Attempting to delete news item: {news_id}")
+        
+        # Delete the news item
+        response = requests.delete(
+            f"{BASE_URL}/crypto-news/{news_id}",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            message = result.get('message', '')
+            
+            print_success("Crypto news item deleted successfully")
+            print_info(f"Delete response: {message}")
+            
+            # Verify the news item is actually deleted
+            verify_response = requests.get(
+                f"{BASE_URL}/crypto-news",
+                headers=HEADERS,
+                timeout=30
+            )
+            
+            if verify_response.status_code == 200:
+                remaining_news = verify_response.json()
+                deleted_item_exists = any(item.get('id') == news_id for item in remaining_news)
+                
+                if not deleted_item_exists:
+                    print_success("✓ News item successfully removed from database")
+                    return True
+                else:
+                    print_error("✗ News item still exists after deletion")
+                    return False
+            else:
+                print_error("Could not verify deletion")
+                return False
+                
+        elif response.status_code == 404:
+            print_error("News item not found (404)")
+            return False
+            
+        else:
+            print_error(f"Delete crypto news failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False
+            
+    except Exception as e:
+        print_error(f"Delete crypto news test error: {str(e)}")
+        return False
+
+def test_crypto_news_error_handling():
+    """Test error handling for crypto news endpoints"""
+    print_test_header("Testing Crypto News Error Handling")
+    
+    try:
+        checks_passed = 0
+        total_checks = 2
+        
+        # Test 1: Delete non-existent news item
+        print_info("Testing delete with non-existent news ID...")
+        fake_id = "non-existent-news-id-12345"
+        
+        response = requests.delete(
+            f"{BASE_URL}/crypto-news/{fake_id}",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 404:
+            print_success("✓ Proper 404 error for non-existent news item")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Unexpected response for non-existent news: {response.status_code}")
+        
+        # Test 2: Verify crawl endpoint handles errors gracefully
+        print_info("Testing crawl endpoint error resilience...")
+        
+        # This test just verifies the endpoint exists and responds
+        # We can't easily test Playwright failures without breaking the system
+        response = requests.get(
+            f"{BASE_URL}/crypto-news/crawl",
+            headers=HEADERS,
+            timeout=5  # Short timeout to potentially trigger timeout handling
+        )
+        
+        # Accept both success and timeout as valid responses
+        if response.status_code in [200, 500, 408]:  # Success, server error, or timeout
+            print_success("✓ Crawl endpoint responds appropriately to requests")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Unexpected crawl response: {response.status_code}")
+        
+        print_info(f"Error handling test: {checks_passed}/{total_checks} checks passed")
+        return checks_passed >= 1
+        
+    except Exception as e:
+        print_error(f"Crypto news error handling test error: {str(e)}")
+        return False
+
+def test_playwright_integration():
+    """Test that Playwright integration is working correctly"""
+    print_test_header("Testing Playwright Integration")
+    
+    try:
+        print_info("Testing Playwright browser launch and CryptoPanic access...")
+        print_info("⚠️  This test verifies Playwright can launch Chromium and access CryptoPanic")
+        
+        # Trigger a crawl to test Playwright
+        response = requests.get(
+            f"{BASE_URL}/crypto-news/crawl",
+            headers=HEADERS,
+            timeout=45  # Give enough time for browser operations
+        )
+        
+        checks_passed = 0
+        total_checks = 4
+        
+        # Check 1: Endpoint responds (not necessarily successfully)
+        if response.status_code in [200, 500]:  # Either success or server error is acceptable
+            print_success("✓ Crawl endpoint is accessible")
+            checks_passed += 1
+        else:
+            print_error(f"✗ Crawl endpoint not accessible: {response.status_code}")
+        
+        if response.status_code == 200:
+            result = response.json()
+            news_items = result.get('news', [])
+            
+            # Check 2: Playwright successfully launched and crawled
+            if len(news_items) > 0:
+                print_success("✓ Playwright successfully launched and crawled data")
+                checks_passed += 1
+            else:
+                print_error("✗ Playwright launched but no data crawled")
+            
+            # Check 3: CryptoPanic selectors are working
+            if len(news_items) > 0:
+                sample_item = news_items[0]
+                has_title = bool(sample_item.get('title'))
+                has_url = bool(sample_item.get('url'))
+                
+                if has_title and has_url:
+                    print_success("✓ CryptoPanic selectors (.title-text a) working correctly")
+                    checks_passed += 1
+                else:
+                    print_error("✗ CryptoPanic selectors not extracting data properly")
+            
+            # Check 4: URLs are absolute (not relative)
+            if len(news_items) > 0:
+                sample_url = news_items[0].get('url', '')
+                if sample_url.startswith('https://'):
+                    print_success("✓ URLs are converted to absolute format")
+                    checks_passed += 1
+                else:
+                    print_error(f"✗ URLs not absolute: {sample_url}")
+        
+        elif response.status_code == 500:
+            # Server error might indicate Playwright issues
+            print_error("✗ Server error during crawl - possible Playwright configuration issue")
+            print_error(f"Response: {response.text}")
+        
+        print_info(f"Playwright integration: {checks_passed}/{total_checks} checks passed")
+        return checks_passed >= 2
+        
+    except Exception as e:
+        print_error(f"Playwright integration test error: {str(e)}")
+        return False
+
 def main():
     """Run all backend tests"""
     print("🚀 Partner Content Hub & KOL Post - Backend API Testing")
