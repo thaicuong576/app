@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Newspaper, Users, Globe, ArrowRight } from 'lucide-react';
+import { FileText, Newspaper, Users, Globe, TrendingUp, ArrowRight } from 'lucide-react';
 
 const Home = () => {
 
@@ -36,6 +36,14 @@ const Home = () => {
       icon: Globe,
       path: '/social-to-website',
       gradient: 'from-green-500 to-emerald-600'
+    },
+    {
+      id: 'crypto-news-feed',
+      title: 'Crypto News Feed',
+      description: 'Crawl tin tức crypto mới nhất từ CryptoPanic',
+      icon: TrendingUp,
+      path: '/crypto-news-feed',
+      gradient: 'from-red-500 to-rose-600'
     }
   ];
 
