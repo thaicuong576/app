@@ -727,6 +727,154 @@ frontend:
           - Vietnamese UI với emojis theo context document
           - Full CRUD support: Create → Read → Update → Delete
 
+  - task: "Crypto News Feed - Crawl from CryptoPanic"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py, /app/frontend/src/pages/CryptoNewsFeed.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          🎉 ĐÃ HOÀN THÀNH CRYPTO NEWS FEED - FUNCTION #5!
+          
+          ✅ BACKEND IMPLEMENTATION:
+          1. Dependencies:
+             - Installed Playwright for Python (1.55.0)
+             - Installed Chromium browser for headless scraping
+             - Added to requirements.txt
+          
+          2. Data Model:
+             - CryptoNews model với fields:
+               * id: UUID
+               * title: str (news headline)
+               * url: str (link to original article)
+               * source: Optional[str] (e.g., "Cointelegraph", "CoinDesk")
+               * published_time: Optional[str] (relative time like "2h ago")
+               * summary: Optional[str] (for future use)
+               * image_url: Optional[str] (for future use)
+               * votes: Optional[str] (upvotes/downvotes from CryptoPanic)
+               * created_at: datetime
+             - MongoDB collection: crypto_news
+          
+          3. Playwright Crawling Function:
+             - Function: crawl_cryptopanic_with_playwright()
+             - Uses async Playwright API
+             - Launches Chromium in headless mode
+             - Navigates to https://cryptopanic.com/
+             - Waits for '.news-cell' elements to load
+             - Extracts top 20 news items with selectors:
+               * Title: '.title-text a' (inner_text + href)
+               * Source: '.source a' (inner_text)
+               * Published time: '.published-date' (inner_text)
+               * Votes: '.votes' (inner_text)
+             - Handles errors gracefully per news item
+             - Converts relative URLs to absolute
+             - Returns List[Dict] of news data
+          
+          4. API Endpoints:
+             - GET /api/crypto-news/crawl
+               * Triggers fresh Playwright crawl
+               * Clears old news from database
+               * Saves new crawled news
+               * Returns: {"message": "...", "news": [...]}
+             - GET /api/crypto-news
+               * Retrieves all cached news from DB
+               * Sorted by created_at descending
+               * Returns: List[CryptoNews]
+             - DELETE /api/crypto-news/{news_id}
+               * Deletes specific news item
+               * Returns: {"message": "News deleted successfully"}
+          
+          ✅ FRONTEND IMPLEMENTATION:
+          1. Page: CryptoNewsFeed.js
+             - Route: /crypto-news-feed
+             - Color scheme: Red gradient (from-red-500 to-rose-600)
+             - Icon: TrendingUp
+          
+          2. UI Layout:
+             - Header:
+               * Home button (navigate back)
+               * Page title with icon
+               * "Crawl Fresh News" button (primary CTA)
+             - Content area:
+               * Loading state during data fetch
+               * Empty state with helpful message
+               * News list (card-based layout)
+          
+          3. News Card Design:
+             - White background with red left border (border-l-4 border-red-500)
+             - Title: Clickable link with ExternalLink icon
+             - Meta info row:
+               * 📰 Source (e.g., Cointelegraph)
+               * 🕐 Published time (e.g., "2h ago")
+               * 👍 Votes (if available)
+             - Delete button (Trash2 icon)
+             - Hover effects: shadow-xl
+          
+          4. Features:
+             - Auto-load cached news on mount
+             - "Crawl Fresh News" button:
+               * Shows loading spinner during crawl
+               * Toast notifications for progress
+               * Updates news list on success
+             - Individual news delete with confirmation
+             - External links open in new tab
+             - Info box showing total news count
+          
+          5. Responsive Design:
+             - Single column layout for news cards
+             - Max-width container (max-w-6xl)
+             - Mobile-friendly spacing and text sizes
+          
+          ✅ HOME PAGE UPDATE:
+          - Added 5th feature card to Home.js
+          - Title: "Crypto News Feed"
+          - Description: "Crawl tin tức crypto mới nhất từ CryptoPanic"
+          - Icon: TrendingUp (lucide-react)
+          - Gradient: from-red-500 to-rose-600 (matching page theme)
+          - Path: /crypto-news-feed
+          
+          ✅ ROUTING UPDATE:
+          - Updated App.js to include CryptoNewsFeed route
+          - Import: import CryptoNewsFeed from '@/pages/CryptoNewsFeed';
+          - Route: <Route path="/crypto-news-feed" element={<CryptoNewsFeed />} />
+          
+          📊 TECHNICAL DETAILS:
+          - Web scraping method: Playwright (not BeautifulSoup as requested)
+          - Browser: Chromium headless
+          - Target site: https://cryptopanic.com/
+          - News limit: Top 20 items per crawl
+          - Database: MongoDB (crypto_news collection)
+          - Frontend framework: React with React Router
+          - UI library: Tailwind CSS + lucide-react icons
+          - Toast notifications: sonner
+          
+          🎯 KEY FEATURES:
+          - ✓ Playwright web scraping (as requested by user)
+          - ✓ Automatic crawling of CryptoPanic
+          - ✓ Simple list view with links (as requested)
+          - ✓ Source, time, and votes display
+          - ✓ Delete functionality
+          - ✓ Refresh/crawl on demand
+          - ✓ Cached news loading
+          - ✓ Red color scheme (5th unique color)
+          - ✓ Responsive design
+          
+          ⚠️ CẦN TESTING:
+          1. Test Playwright crawl endpoint: GET /api/crypto-news/crawl
+          2. Verify news extraction accuracy (title, URL, source, time, votes)
+          3. Check database storage (crypto_news collection)
+          4. Test frontend news display
+          5. Verify external links work correctly
+          6. Test delete functionality
+          7. Test loading states and error handling
+          8. Verify Chromium headless mode works in production
+          9. Check if CryptoPanic blocks headless browsers (may need user-agent)
+          10. Test responsive layout on mobile/tablet
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
