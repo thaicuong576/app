@@ -7,6 +7,7 @@ import PartnerContentHub from '@/pages/PartnerContentHub';
 import NewsGenerator from '@/pages/NewsGenerator';
 import KOLPost from '@/pages/KOLPost';
 import SocialToWebsite from '@/pages/SocialToWebsite';
+import CryptoNewsFeed from '@/pages/CryptoNewsFeed';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/news-generator" element={<NewsGenerator />} />
           <Route path="/kol-post" element={<KOLPost />} />
           <Route path="/social-to-website" element={<SocialToWebsite />} />
+          <Route path="/crypto-news-feed" element={<CryptoNewsFeed />} />
         </Routes>
       </BrowserRouter>
     </>
