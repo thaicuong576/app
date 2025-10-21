@@ -152,6 +152,18 @@ class SocialPostGenerate(BaseModel):
 class SocialPostUpdate(BaseModel):
     generated_content: str
 
+class CryptoNews(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    url: str
+    source: Optional[str] = None  # e.g., "Cointelegraph", "CoinDesk"
+    published_time: Optional[str] = None
+    summary: Optional[str] = None
+    image_url: Optional[str] = None
+    votes: Optional[str] = None  # Upvotes/downvotes if available
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Helper functions
 async def download_image(image_url: str, project_id: str) -> Optional[str]:
     """Download image and return local path"""
