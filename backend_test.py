@@ -1579,6 +1579,26 @@ def main():
     # Test 17: Delete Partner Content Hub Project
     test_results['delete_partner_project'] = test_delete_partner_content_project(project_id)
     
+    # CRYPTO NEWS FEED TESTS
+    print_test_header("CRYPTO NEWS FEED FEATURE TESTING")
+    
+    # Test 18: Crypto News Crawl (Playwright)
+    crawled_news = test_crypto_news_crawl()
+    test_results['crypto_news_crawl'] = crawled_news is not None
+    
+    # Test 19: Get Cached Crypto News
+    first_news_id = test_get_cached_crypto_news()
+    test_results['get_cached_crypto_news'] = first_news_id is not None
+    
+    # Test 20: Delete Crypto News
+    test_results['delete_crypto_news'] = test_delete_crypto_news(first_news_id)
+    
+    # Test 21: Crypto News Error Handling
+    test_results['crypto_news_error_handling'] = test_crypto_news_error_handling()
+    
+    # Test 22: Playwright Integration
+    test_results['playwright_integration'] = test_playwright_integration()
+    
     # Clean up URL project if created
     if url_project_id:
         test_delete_partner_content_project(url_project_id)
