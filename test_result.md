@@ -165,7 +165,7 @@ backend:
           5. Load Distribution:
              - Round-robin rotation after each successful call
              - Prevents one key from being overused
-             - Distributes load evenly across all 3 keys
+             - Distributes load evenly across all 4 keys
           
           6. User Experience:
              - Seamless failover (user doesn't see errors)
