@@ -34,6 +34,79 @@ db = client[os.environ['DB_NAME']]
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 
+# Multiple Google API Keys for failover
+GOOGLE_API_KEYS = [
+    "AIzaSyDZaFsKqNMXs-Ni2Cr-w9hHhUqPqB8gKjs",
+    "AIzaSyD4Nz1llcsVKkiWv2txzpAJnf_i6QqQl3I",
+    "AIzaSyDhMC5X_es42QaUnDQi9YwwtaVLYcSpiE4"
+]
+
+# API Key Manager for automatic failover
+class APIKeyManager:
+    """Manages multiple API keys with automatic failover on rate limits"""
+    
+    def __init__(self, keys: List[str]):
+        self.keys = keys
+        self.current_index = 0
+    
+    def get_current_key(self) -> str:
+        """Get the current API key"""
+        return self.keys[self.current_index]
+    
+    def get_next_key(self) -> str:
+        """Rotate to the next API key"""
+        self.current_index = (self.current_index + 1) % len(self.keys)
+        return self.keys[self.current_index]
+    
+    def reset(self):
+        """Reset to the first key"""
+        self.current_index = 0
+    
+    async def try_with_all_keys(self, func, *args, **kwargs):
+        """
+        Try executing a function with all available API keys.
+        Automatically switches to next key on rate limit or quota errors.
+        """
+        last_error = None
+        attempted_keys = []
+        
+        for attempt in range(len(self.keys)):
+            current_key = self.get_current_key()
+            attempted_keys.append(current_key[-4:])  # Log last 4 chars for debugging
+            
+            try:
+                logging.info(f"Attempting API call with key ending in ...{current_key[-4:]} (attempt {attempt + 1}/{len(self.keys)})")
+                result = await func(current_key, *args, **kwargs)
+                logging.info(f"✅ Success with key ending in ...{current_key[-4:]}")
+                # Success! Rotate to next key for next call (round-robin)
+                self.get_next_key()
+                return result
+                
+            except Exception as e:
+                error_msg = str(e).lower()
+                last_error = e
+                
+                # Check if it's a rate limit or quota error
+                if any(keyword in error_msg for keyword in ['rate limit', 'quota', 'overload', '429', 'resource exhausted', 'too many requests']):
+                    logging.warning(f"⚠️ Rate limit/quota error with key ...{current_key[-4:]}: {str(e)[:100]}")
+                    # Try next key
+                    self.get_next_key()
+                    continue
+                else:
+                    # For other errors, don't try other keys (likely a code/input issue)
+                    logging.error(f"❌ Non-recoverable error with key ...{current_key[-4:]}: {str(e)[:100]}")
+                    raise e
+        
+        # All keys failed
+        logging.error(f"❌ All {len(self.keys)} API keys failed. Attempted keys ending in: {attempted_keys}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"All API keys are currently overloaded or have reached quota limits. Please try again later. (Tried {len(attempted_keys)} keys)"
+        )
+
+# Initialize the key manager
+api_key_manager = APIKeyManager(GOOGLE_API_KEYS)
+
 # Create images directory
 IMAGES_DIR = ROOT_DIR / 'static' / 'images'
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
