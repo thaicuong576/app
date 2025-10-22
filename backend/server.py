@@ -739,10 +739,11 @@ Nội dung:
 @api_router.post("/projects/{project_id}/social")
 async def generate_social_content(project_id: str, request: SocialGenerateRequest):
     """Generate social media content using Gemini with user's preset prompt"""
-    try:
-        # Initialize Gemini chat with Google API key
+    
+    # Define the generation function that will be tried with multiple keys
+    async def _generate_with_key(api_key: str):
         chat = LlmChat(
-            api_key=GOOGLE_API_KEY,
+            api_key=api_key,
             session_id=f"social_{project_id}",
             system_message="Bạn là một người quản lý cộng đồng (Community Manager) cho một kênh tin tức về crypto."
         ).with_model("gemini", "gemini-2.0-flash-exp")
