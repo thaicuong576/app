@@ -611,10 +611,11 @@ async def download_image_proxy(url: str, filename: str):
 @api_router.post("/projects/{project_id}/translate")
 async def translate_content(project_id: str, request: TranslateRequest):
     """Translate and restructure content using Gemini with user's preset prompt"""
-    try:
-        # Initialize Gemini chat with Google API key
+    
+    # Define the translation function that will be tried with multiple keys
+    async def _translate_with_key(api_key: str):
         chat = LlmChat(
-            api_key=GOOGLE_API_KEY,
+            api_key=api_key,
             session_id=f"translate_{project_id}",
             system_message="Bạn là một chuyên gia viết báo về crypto."
         ).with_model("gemini", "gemini-2.5-pro")
