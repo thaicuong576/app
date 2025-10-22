@@ -89,7 +89,7 @@ def test_multi_api_key_failover():
         else:
             print_error(f"✗ Expected 200, got {response.status_code}")
             print_error(f"Response: {response.text}")
-            return False
+            return False, None
         
         result = response.json()
         generated_content = result.get('generated_content', '')
