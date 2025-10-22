@@ -713,7 +713,11 @@ Nội dung:
         if cleaned_response.endswith('```'):
             cleaned_response = cleaned_response[:-3]  # Remove trailing ```
         
-        cleaned_response = cleaned_response.strip()
+        return cleaned_response.strip()
+    
+    try:
+        # Try with all available API keys
+        cleaned_response = await api_key_manager.try_with_all_keys(_translate_with_key)
         
         # Update database
         await db.projects.update_one(
