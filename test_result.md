@@ -172,10 +172,11 @@ backend:
              - Only fails if ALL 3 keys are overloaded
              - Clear error message with retry suggestion
           
-          API KEYS CONFIGURED:
-          - Key 1: ...gKjs
-          - Key 2: ...Ql3I
-          - Key 3: ...piE4
+          API KEYS CONFIGURED (4 total):
+          - Key 1: ...DgI (Original from environment)
+          - Key 2: ...gKjs (Additional key 1)
+          - Key 3: ...Ql3I (Additional key 2)
+          - Key 4: ...piE4 (Additional key 3)
           
           BACKEND STATUS:
           - Syntax check: ✅ PASSED
