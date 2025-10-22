@@ -34,12 +34,16 @@ db = client[os.environ['DB_NAME']]
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 
-# Multiple Google API Keys for failover
+# Multiple Google API Keys for failover (original + 3 additional)
 GOOGLE_API_KEYS = [
-    "AIzaSyDZaFsKqNMXs-Ni2Cr-w9hHhUqPqB8gKjs",
-    "AIzaSyD4Nz1llcsVKkiWv2txzpAJnf_i6QqQl3I",
-    "AIzaSyDhMC5X_es42QaUnDQi9YwwtaVLYcSpiE4"
+    GOOGLE_API_KEY,  # Original key from environment
+    "AIzaSyDZaFsKqNMXs-Ni2Cr-w9hHhUqPqB8gKjs",  # Additional key 1
+    "AIzaSyD4Nz1llcsVKkiWv2txzpAJnf_i6QqQl3I",  # Additional key 2
+    "AIzaSyDhMC5X_es42QaUnDQi9YwwtaVLYcSpiE4"   # Additional key 3
 ]
+
+# Remove None values if GOOGLE_API_KEY is not set
+GOOGLE_API_KEYS = [key for key in GOOGLE_API_KEYS if key]
 
 # API Key Manager for automatic failover
 class APIKeyManager:
