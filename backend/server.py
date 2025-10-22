@@ -818,11 +818,15 @@ BÀI VIẾT CẦN TẠO SOCIAL POST:
         # Store the Vietnamese social post as a single content piece
         # The response is a ~100 word social media post following the structure:
         # Title → Problem/Context → Insight → CTA
-        social_content = {
+        return {
             'facebook': response.strip(),
             'twitter': '',  # Not used in Vietnamese format
             'hashtags': ''  # Not used in Vietnamese format
         }
+    
+    try:
+        # Try with all available API keys
+        social_content = await api_key_manager.try_with_all_keys(_generate_with_key)
         
         # Update database
         await db.projects.update_one(
