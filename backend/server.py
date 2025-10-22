@@ -1235,23 +1235,28 @@ Nhận xét/Opinion từ người dùng:
         
         user_message_text += "\n\nHãy tạo bản tin crypto summary theo style đã chỉ định. Nhớ: BẮT ĐẦU NGAY với nội dung bản tin, KHÔNG thêm lời mở đầu hay giải thích."
         
-        # Initialize Gemini chat
-        chat = LlmChat(
-            api_key=GOOGLE_API_KEY,
-            session_id=f"news_{uuid.uuid4().hex[:8]}",
-            system_message=system_message
-        ).with_model("gemini", "gemini-2.5-pro")
+        # Define the generation function that will be tried with multiple keys
+        async def _generate_news_with_key(api_key: str):
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=f"news_{uuid.uuid4().hex[:8]}",
+                system_message=system_message
+            ).with_model("gemini", "gemini-2.5-pro")
+            
+            # Generate content
+            user_message = UserMessage(user_message_text)
+            response = await chat.send_message(user_message)
+            return response.strip()
         
-        # Generate content
-        user_message = UserMessage(user_message_text)
-        response = await chat.send_message(user_message)
+        # Try with all available API keys
+        generated_content = await api_key_manager.try_with_all_keys(_generate_news_with_key)
         
         # Create and save news article
         news_article = NewsArticle(
             source_content=request.source_content,
             opinion=request.opinion,
             style_choice=request.style_choice,
-            generated_content=response.strip(),
+            generated_content=generated_content,
             source_type=request.source_type
         )
         
