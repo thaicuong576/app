@@ -105,7 +105,7 @@ class APIKeyManager:
         logging.error(f"❌ All {len(self.keys)} API keys failed. Attempted keys ending in: {attempted_keys}")
         raise HTTPException(
             status_code=503,
-            detail=f"All API keys are currently overloaded or have reached quota limits. Please try again later. (Tried {len(attempted_keys)} keys)"
+            detail=f"All {len(self.keys)} API keys are currently overloaded or have reached quota limits. Please try again later."
         )
 
 # Initialize the key manager
