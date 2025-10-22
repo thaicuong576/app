@@ -107,8 +107,88 @@ user_problem_statement: |
   Nâng cấp hệ thống AI prompts với 2 preset chuyên biệt:
   1. 🚀 Dịch và Tái cấu trúc: Dịch bài viết tiếng Anh sang tiếng Việt với văn phong báo chí crypto chuyên nghiệp
   2. ✍️ Tạo Content Social: Tạo bài đăng social media ~100 từ với cấu trúc Tiêu đề → Dẫn dắt → Insight → CTA
+  
+  LATEST ENHANCEMENT (Multi-API Key Failover):
+  - Implement multiple Google API key support (3 keys)
+  - Automatic failover when one key is overloaded or hits rate limits
+  - Ensure continuous output instead of showing "overloaded" errors
 
 backend:
+  - task: "Multi-API Key Failover System"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ MULTI-API KEY FAILOVER SYSTEM IMPLEMENTED:
+          
+          OVERVIEW:
+          - Configured 3 Google API keys for automatic failover
+          - Prevents "overloaded" errors by trying all keys sequentially
+          - Round-robin rotation for load distribution
+          
+          IMPLEMENTATION DETAILS:
+          1. APIKeyManager Class Created:
+             - Stores 3 Google API keys
+             - get_current_key(): Returns current active key
+             - get_next_key(): Rotates to next key (round-robin)
+             - try_with_all_keys(): Wrapper method that tries all keys on failures
+             - Intelligent error detection (rate limit, quota, overload errors)
+          
+          2. Error Handling Strategy:
+             - Catches rate limit errors (429)
+             - Catches quota exceeded errors
+             - Catches "resource exhausted" errors
+             - Catches "overload" errors
+             - Automatically switches to next key on these errors
+             - For other errors (code issues), fails immediately without trying other keys
+          
+          3. Updated ALL AI Endpoints:
+             ✓ batch_translate_to_vietnamese_slugs - Batch translation
+             ✓ POST /api/projects/{project_id}/translate - Partner Content Hub translate
+             ✓ POST /api/projects/{project_id}/social - Partner Content Hub social
+             ✓ POST /api/kol-posts/generate - KOL Post generation
+             ✓ POST /api/news/generate - News Generator
+             ✓ POST /api/social-posts/generate - Social-to-Website Post
+          
+          4. Logging & Monitoring:
+             - Logs which key is being used (shows last 4 chars for security)
+             - Logs attempt number (1/3, 2/3, 3/3)
+             - Logs success/failure for each key
+             - Clear error message when all keys fail
+          
+          5. Load Distribution:
+             - Round-robin rotation after each successful call
+             - Prevents one key from being overused
+             - Distributes load evenly across all 3 keys
+          
+          6. User Experience:
+             - Seamless failover (user doesn't see errors)
+             - Only fails if ALL 3 keys are overloaded
+             - Clear error message with retry suggestion
+          
+          API KEYS CONFIGURED:
+          - Key 1: ...gKjs
+          - Key 2: ...Ql3I
+          - Key 3: ...piE4
+          
+          BACKEND STATUS:
+          - Syntax check: ✅ PASSED
+          - Backend restart: ✅ SUCCESS
+          - Service status: ✅ RUNNING
+          
+          TESTING NEEDED:
+          1. Test normal operation with all endpoints
+          2. Verify automatic failover when key is overloaded
+          3. Check logging output for key rotation
+          4. Test behavior when all keys fail
+          5. Verify round-robin rotation is working
+          6. Monitor performance and response times
   - task: "API endpoint để dịch và tái cấu trúc nội dung crypto"
     implemented: true
     working: true
