@@ -1004,15 +1004,16 @@ QUAN TRỌNG:
 - KHÔNG lạm dụng cảm thán
 - Giữ phong cách tự nhiên như đang chat với bạn bè"""
 
-        # Initialize Gemini chat
-        chat = LlmChat(
-            api_key=GOOGLE_API_KEY,
-            session_id=f"kol_post_{uuid.uuid4().hex[:8]}",
-            system_message=system_message
-        ).with_model("gemini", "gemini-2.5-pro")
-        
-        # Create user message
-        user_message = UserMessage(f"""Đây là thông tin cần học:
+        # Define the generation function that will be tried with multiple keys
+        async def _generate_kol_with_key(api_key: str):
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=f"kol_post_{uuid.uuid4().hex[:8]}",
+                system_message=system_message
+            ).with_model("gemini", "gemini-2.5-pro")
+            
+            # Create user message
+            user_message = UserMessage(f"""Đây là thông tin cần học:
 
 {information_content}
 
@@ -1020,15 +1021,19 @@ QUAN TRỌNG:
 {request.insight_required}
 
 Hãy viết 1 bài post theo phong cách của bạn, kết hợp thông tin trên và nhận định đã cho. Nhớ: nhận định ngắn gọn, không giải thích dài dòng.""")
+            
+            # Generate content
+            response = await chat.send_message(user_message)
+            return response.strip()
         
-        # Generate content
-        response = await chat.send_message(user_message)
+        # Try with all available API keys
+        generated_content = await api_key_manager.try_with_all_keys(_generate_kol_with_key)
         
         # Create and save KOL post
         kol_post = KOLPost(
             information_source=request.information_source,
             insight_required=request.insight_required,
-            generated_content=response.strip(),
+            generated_content=generated_content,
             source_type=request.source_type
         )
         
