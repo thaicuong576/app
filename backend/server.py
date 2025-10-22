@@ -269,10 +269,10 @@ async def batch_translate_to_vietnamese_slugs(texts: List[str]) -> List[str]:
     if not texts:
         return []
     
-    try:
-        # Use Gemini to translate all texts in one call
+    # Define the translation function that will be tried with multiple keys
+    async def _translate_with_key(api_key: str):
         llm = LlmChat(
-            api_key=os.getenv('GOOGLE_API_KEY'),
+            api_key=api_key,
             session_id=f"batch_translate_{uuid.uuid4().hex[:8]}",
             system_message="You are a translator. Translate English to simple, natural Vietnamese."
         ).with_model("gemini", "gemini-2.0-flash-exp")
@@ -288,7 +288,11 @@ Do NOT add explanations or extra text.
         
         user_message = UserMessage(text=prompt)
         response_obj = await llm.send_message(user_message)
-        response_text = response_obj.strip()
+        return response_obj.strip()
+    
+    try:
+        # Try with all available API keys
+        response_text = await api_key_manager.try_with_all_keys(_translate_with_key)
         
         # Parse response - extract translations
         translations = []
