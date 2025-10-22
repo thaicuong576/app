@@ -169,8 +169,8 @@ backend:
           
           6. User Experience:
              - Seamless failover (user doesn't see errors)
-             - Only fails if ALL 3 keys are overloaded
-             - Clear error message with retry suggestion
+             - Only fails if ALL 4 keys are overloaded
+             - Clear error message when all keys exhausted
           
           API KEYS CONFIGURED (4 total):
           - Key 1: ...DgI (Original from environment)
