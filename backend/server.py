@@ -1440,16 +1440,21 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
         
         user_message_text = "\n".join(user_message_parts)
         
-        # Initialize Gemini chat
-        chat = LlmChat(
-            api_key=GOOGLE_API_KEY,
-            session_id=f"social_{uuid.uuid4().hex[:8]}",
-            system_message=system_message
-        ).with_model("gemini", "gemini-2.5-pro")
+        # Define the generation function that will be tried with multiple keys
+        async def _generate_social_post_with_key(api_key: str):
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=f"social_{uuid.uuid4().hex[:8]}",
+                system_message=system_message
+            ).with_model("gemini", "gemini-2.5-pro")
+            
+            # Generate content
+            user_message = UserMessage(user_message_text)
+            response = await chat.send_message(user_message)
+            return response.strip()
         
-        # Generate content
-        user_message = UserMessage(user_message_text)
-        response = await chat.send_message(user_message)
+        # Try with all available API keys
+        generated_content = await api_key_manager.try_with_all_keys(_generate_social_post_with_key)
         
         # Create and save social post
         social_post = SocialPost(
@@ -1459,7 +1464,7 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
             title=request.title,
             introduction=request.introduction,
             highlight=request.highlight,
-            generated_content=response.strip()
+            generated_content=generated_content
         )
         
         await db.social_posts.insert_one(social_post.dict())
