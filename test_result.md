@@ -158,9 +158,9 @@ backend:
           
           4. Logging & Monitoring:
              - Logs which key is being used (shows last 4 chars for security)
-             - Logs attempt number (1/3, 2/3, 3/3)
+             - Logs attempt number (1/4, 2/4, 3/4, 4/4)
              - Logs success/failure for each key
-             - Clear error message when all keys fail
+             - Clear error message when all 4 keys fail
           
           5. Load Distribution:
              - Round-robin rotation after each successful call
