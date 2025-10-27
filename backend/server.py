@@ -1603,11 +1603,23 @@ async def refresh_rss_feed():
         
         for entry in feed.entries:
             # Extract data from RSS entry
+            summary = entry.get("summary", "")
+            content_list = entry.get("content", [])
+            content_value = ""
+            
+            # Try to get content from content field first
+            if content_list and isinstance(content_list, list) and len(content_list) > 0:
+                content_value = content_list[0].get("value", "")
+            
+            # If no content, use summary
+            if not content_value:
+                content_value = summary
+            
             article_data = {
                 "title": entry.get("title", ""),
-                "description": entry.get("summary", ""),
+                "description": summary,
                 "link": entry.get("link", ""),
-                "content": entry.get("content", [{}])[0].get("value", "") if entry.get("content") else entry.get("summary", ""),
+                "content": content_value,
                 "published_date": entry.get("published", ""),
                 "guid": entry.get("id", entry.get("link", ""))
             }
