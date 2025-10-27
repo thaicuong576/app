@@ -225,6 +225,111 @@ backend:
           - The failover system worked exactly as designed: try each key, log attempts, fail gracefully
           
           ✅ CONCLUSION: Multi-API Key Failover System is PRODUCTION READY and working correctly!
+      - working: "NA"
+        agent: "main"
+        comment: |
+          🎯 NÂNG CẤP COOLDOWN TRACKING - Giải quyết vấn đề overload nhanh:
+          
+          🔧 ENHANCEMENT IMPLEMENTED:
+          - User báo cáo: Có 4 API keys nhưng vẫn bị overload nhanh
+          - Root cause: Hệ thống không "nhớ" key nào đang bị rate limit
+          - Kết quả: Mỗi request lại thử các key đã bị rate limit → waste attempts
+          
+          ✅ COOLDOWN TRACKING SYSTEM:
+          
+          1. **Smart Key Tracking:**
+             - Dictionary lưu timestamp khi key bị rate limit: {key: timestamp}
+             - Default cooldown period: 60 giây
+             - Tự động xóa key khỏi cooldown khi hết thời gian
+          
+          2. **Intelligent Key Selection:**
+             - get_available_keys(): Chỉ trả về keys KHÔNG trong cooldown
+             - is_key_in_cooldown(): Check real-time status của từng key
+             - mark_key_rate_limited(): Đánh dấu key bị rate limit với timestamp
+          
+          3. **Enhanced try_with_all_keys Logic:**
+             - ⏭️ SKIP keys đang trong cooldown (không waste attempts)
+             - 🔄 CHỈ thử keys còn available
+             - 📊 Log clear về status: AVAILABLE vs COOLDOWN (Xs remaining)
+             - 🔒 Auto mark keys bị rate limit với cooldown 60s
+          
+          4. **Comprehensive Logging:**
+             - 🔑 Key Status at start: Show all keys (AVAILABLE/COOLDOWN)
+             - 📊 Available count: X/Y keys available
+             - ⏭️ Skip logs: "Skipping key ...gKjs (cooldown: 45s remaining)"
+             - 🔄 Attempt logs: "Attempting with key ...Ql3I (attempt 2/3)"
+             - ✅ Success logs: Which key succeeded
+             - 🔒 Rate limit logs: "Key ...piE4 marked as rate limited. Cooldown: 60s"
+             - ❌ Failure logs: Attempted vs Skipped keys breakdown
+          
+          5. **Error Messages:**
+             - Nếu ALL keys trong cooldown: "All 4 keys are temporarily rate limited. Please wait."
+             - Nếu available keys fail: "All available keys (X) overloaded. Y keys in cooldown."
+          
+          📊 HOW IT WORKS - VÍ DỤ THỰC TẾ:
+          
+          Scenario: Traffic cao với 4 API keys
+          
+          **Request 1:**
+          - Status: All 4 keys AVAILABLE
+          - Try Key 1 → overload (mark cooldown 60s)
+          - Try Key 2 → overload (mark cooldown 60s)
+          - Try Key 3 → SUCCESS ✅
+          - Result: Success, Key 1,2 trong cooldown
+          
+          **Request 2 (1 giây sau):**
+          - Status: Key 1 (59s), Key 2 (59s), Key 3 AVAILABLE, Key 4 AVAILABLE
+          - Skip Key 1 (cooldown 59s)
+          - Skip Key 2 (cooldown 59s)
+          - Try Key 3 → overload (mark cooldown 60s)
+          - Try Key 4 → SUCCESS ✅
+          - Result: Success, Key 1,2,3 trong cooldown
+          
+          **Request 3 (2 giây sau):**
+          - Status: Key 1 (58s), Key 2 (58s), Key 3 (59s), Key 4 AVAILABLE
+          - Skip Key 1,2,3 (cooldown)
+          - Try Key 4 → SUCCESS ✅
+          - Result: Success với chỉ 1 key available
+          
+          **Request 4 (65 giây sau Request 1):**
+          - Status: Key 1 AVAILABLE (cooldown expired), Key 2 AVAILABLE, Key 3 (trong cooldown), Key 4 AVAILABLE
+          - Try Key 1 → SUCCESS ✅
+          - Result: Key 1 đã recovered và hoạt động lại!
+          
+          🎯 KEY BENEFITS:
+          - ✅ KHÔNG waste attempts cho keys đang rate limited
+          - ✅ Distribute load tốt hơn across available keys
+          - ✅ Tự động recovery khi keys hết cooldown
+          - ✅ Clear visibility về key status qua logs
+          - ✅ Giảm thiểu "all keys overloaded" scenarios
+          - ✅ Improved user experience với better availability
+          
+          📋 IMPLEMENTATION DETAILS:
+          - File: /app/backend/server.py
+          - Class: APIKeyManager (enhanced)
+          - New methods: 5 (is_key_in_cooldown, mark_key_rate_limited, get_available_keys, get_cooldown_status)
+          - Updated: try_with_all_keys() with skip logic
+          - Cooldown: 60 seconds (configurable)
+          - Timestamp: UTC timezone
+          
+          🔄 BACKWARD COMPATIBLE:
+          - Existing code không cần thay đổi
+          - All endpoints tự động benefit từ cooldown tracking
+          - API contracts không thay đổi
+          
+          ⚠️ CẦN TESTING:
+          1. Test với multiple rapid requests
+          2. Verify keys được skip khi trong cooldown
+          3. Check logs show correct status
+          4. Verify keys recover sau 60s
+          5. Test behavior khi all keys trong cooldown
+          6. Verify round-robin vẫn hoạt động
+          
+          🚀 STATUS:
+          - Backend restart: ✅ SUCCESS
+          - Service running: ✅ HEALTHY
+          - No errors in logs: ✅ CLEAN
+          - Ready for testing: ✅ YES
   - task: "API endpoint để dịch và tái cấu trúc nội dung crypto"
     implemented: true
     working: true
