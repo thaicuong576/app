@@ -45,13 +45,16 @@ GOOGLE_API_KEYS = [
 # Remove None values if GOOGLE_API_KEY is not set
 GOOGLE_API_KEYS = [key for key in GOOGLE_API_KEYS if key]
 
-# API Key Manager for automatic failover
+# API Key Manager for automatic failover with cooldown tracking
 class APIKeyManager:
-    """Manages multiple API keys with automatic failover on rate limits"""
+    """Manages multiple API keys with automatic failover on rate limits and cooldown tracking"""
     
-    def __init__(self, keys: List[str]):
+    def __init__(self, keys: List[str], cooldown_seconds: int = 60):
         self.keys = keys
         self.current_index = 0
+        self.cooldown_seconds = cooldown_seconds
+        # Track when each key was rate limited: {key: timestamp}
+        self.rate_limited_keys: Dict[str, float] = {}
     
     def get_current_key(self) -> str:
         """Get the current API key"""
@@ -66,22 +69,90 @@ class APIKeyManager:
         """Reset to the first key"""
         self.current_index = 0
     
+    def is_key_in_cooldown(self, key: str) -> bool:
+        """Check if a key is currently in cooldown period"""
+        if key not in self.rate_limited_keys:
+            return False
+        
+        # Check if cooldown period has passed
+        time_since_rate_limit = datetime.now(timezone.utc).timestamp() - self.rate_limited_keys[key]
+        if time_since_rate_limit >= self.cooldown_seconds:
+            # Cooldown expired, remove from tracking
+            del self.rate_limited_keys[key]
+            return False
+        
+        return True
+    
+    def mark_key_rate_limited(self, key: str):
+        """Mark a key as rate limited with current timestamp"""
+        self.rate_limited_keys[key] = datetime.now(timezone.utc).timestamp()
+        logging.info(f"🔒 Key ...{key[-4:]} marked as rate limited. Cooldown: {self.cooldown_seconds}s")
+    
+    def get_available_keys(self) -> List[str]:
+        """Get list of keys that are not in cooldown"""
+        available = []
+        for key in self.keys:
+            if not self.is_key_in_cooldown(key):
+                available.append(key)
+        return available
+    
+    def get_cooldown_status(self) -> Dict[str, str]:
+        """Get status of all keys for logging"""
+        status = {}
+        for key in self.keys:
+            key_id = f"...{key[-4:]}"
+            if self.is_key_in_cooldown(key):
+                time_remaining = self.cooldown_seconds - (datetime.now(timezone.utc).timestamp() - self.rate_limited_keys[key])
+                status[key_id] = f"COOLDOWN ({int(time_remaining)}s remaining)"
+            else:
+                status[key_id] = "AVAILABLE"
+        return status
+    
     async def try_with_all_keys(self, func, *args, **kwargs):
         """
         Try executing a function with all available API keys.
         Automatically switches to next key on rate limit or quota errors.
+        Skips keys that are in cooldown period.
         """
         last_error = None
         attempted_keys = []
+        skipped_keys = []
         
+        # Get available keys (not in cooldown)
+        available_keys = self.get_available_keys()
+        
+        if not available_keys:
+            # All keys are in cooldown
+            cooldown_status = self.get_cooldown_status()
+            logging.error(f"❌ All {len(self.keys)} API keys are in cooldown. Status: {cooldown_status}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"All {len(self.keys)} API keys are temporarily rate limited. Please wait a moment and try again."
+            )
+        
+        # Log initial status
+        cooldown_status = self.get_cooldown_status()
+        logging.info(f"🔑 Key Status: {cooldown_status}")
+        logging.info(f"📊 Available keys: {len(available_keys)}/{len(self.keys)}")
+        
+        # Try all keys (will automatically skip cooldown keys)
         for attempt in range(len(self.keys)):
             current_key = self.get_current_key()
-            attempted_keys.append(current_key[-4:])  # Log last 4 chars for debugging
+            
+            # Skip if key is in cooldown
+            if self.is_key_in_cooldown(current_key):
+                time_remaining = self.cooldown_seconds - (datetime.now(timezone.utc).timestamp() - self.rate_limited_keys[current_key])
+                skipped_keys.append(current_key[-4:])
+                logging.info(f"⏭️ Skipping key ...{current_key[-4:]} (cooldown: {int(time_remaining)}s remaining)")
+                self.get_next_key()
+                continue
+            
+            attempted_keys.append(current_key[-4:])
             
             try:
-                logging.info(f"Attempting API call with key ending in ...{current_key[-4:]} (attempt {attempt + 1}/{len(self.keys)})")
+                logging.info(f"🔄 Attempting API call with key ...{current_key[-4:]} (attempt {len(attempted_keys)}/{len(available_keys)})")
                 result = await func(current_key, *args, **kwargs)
-                logging.info(f"✅ Success with key ending in ...{current_key[-4:]}")
+                logging.info(f"✅ Success with key ...{current_key[-4:]}")
                 # Success! Rotate to next key for next call (round-robin)
                 self.get_next_key()
                 return result
@@ -92,20 +163,25 @@ class APIKeyManager:
                 
                 # Check if it's a rate limit or quota error
                 if any(keyword in error_msg for keyword in ['rate limit', 'quota', 'overload', '429', 'resource exhausted', 'too many requests']):
-                    logging.warning(f"⚠️ Rate limit/quota error with key ...{current_key[-4:]}: {str(e)[:100]}")
+                    logging.warning(f"⚠️ Rate limit/quota error with key ...{current_key[-4:]}: {str(e)[:150]}")
+                    # Mark key as rate limited
+                    self.mark_key_rate_limited(current_key)
                     # Try next key
                     self.get_next_key()
                     continue
                 else:
                     # For other errors, don't try other keys (likely a code/input issue)
-                    logging.error(f"❌ Non-recoverable error with key ...{current_key[-4:]}: {str(e)[:100]}")
+                    logging.error(f"❌ Non-recoverable error with key ...{current_key[-4:]}: {str(e)[:150]}")
                     raise e
         
-        # All keys failed
-        logging.error(f"❌ All {len(self.keys)} API keys failed. Attempted keys ending in: {attempted_keys}")
+        # All available keys failed
+        cooldown_status = self.get_cooldown_status()
+        logging.error(f"❌ All available API keys failed.")
+        logging.error(f"📊 Attempted: {attempted_keys}, Skipped (cooldown): {skipped_keys}")
+        logging.error(f"🔑 Final Status: {cooldown_status}")
         raise HTTPException(
             status_code=503,
-            detail=f"All {len(self.keys)} API keys are currently overloaded or have reached quota limits. Please try again later."
+            detail=f"All available API keys ({len(attempted_keys)}) are currently overloaded. {len(skipped_keys)} keys are in cooldown. Please try again in a moment."
         )
 
 # Initialize the key manager
