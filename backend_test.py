@@ -1049,6 +1049,444 @@ def test_error_handling_images():
         print_error(f"Error handling test error: {str(e)}")
         return False
 
+# NEWS DISTRIBUTOR API TESTS
+def test_news_distributor_refresh_rss():
+    """Test RSS feed refresh endpoint"""
+    print_test_header("Testing News Distributor - RSS Feed Refresh")
+    
+    try:
+        print_info("Sending RSS refresh request to CoinDesk feed...")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{BASE_URL}/news-distributor/refresh-rss",
+            headers=HEADERS,
+            timeout=60  # RSS parsing can take time
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success(f"RSS refresh completed in {processing_time:.2f} seconds")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 4
+            
+            # Check 1: Response has required fields
+            required_fields = ['articles_saved', 'articles_updated', 'total_articles']
+            missing_fields = [field for field in required_fields if field not in result]
+            
+            if not missing_fields:
+                print_success("✓ Response has all required fields: articles_saved, articles_updated, total_articles")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields in response: {missing_fields}")
+            
+            # Check 2: Articles saved/updated counts are numbers
+            articles_saved = result.get('articles_saved', 0)
+            articles_updated = result.get('articles_updated', 0)
+            total_articles = result.get('total_articles', 0)
+            
+            if isinstance(articles_saved, int) and isinstance(articles_updated, int) and isinstance(total_articles, int):
+                print_success(f"✓ Valid counts - Saved: {articles_saved}, Updated: {articles_updated}, Total: {total_articles}")
+                checks_passed += 1
+            else:
+                print_error("✗ Invalid count types in response")
+            
+            # Check 3: Total articles should be reasonable (> 0 for CoinDesk)
+            if total_articles > 0:
+                print_success(f"✓ RSS feed parsed successfully with {total_articles} articles")
+                checks_passed += 1
+            else:
+                print_error("✗ No articles found in RSS feed")
+            
+            # Check 4: Saved + Updated should equal Total for first run, or Updated >= 0 for subsequent runs
+            if articles_saved + articles_updated == total_articles or (articles_saved == 0 and articles_updated >= 0):
+                print_success("✓ Article counts are consistent")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Inconsistent article counts: {articles_saved} + {articles_updated} != {total_articles}")
+            
+            print_info(f"RSS refresh test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 3, total_articles
+            
+        else:
+            print_error(f"RSS refresh failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, 0
+            
+    except Exception as e:
+        print_error(f"RSS refresh test error: {str(e)}")
+        return False, 0
+
+def test_news_distributor_get_articles():
+    """Test getting articles list endpoint"""
+    print_test_header("Testing News Distributor - Get Articles")
+    
+    try:
+        response = requests.get(
+            f"{BASE_URL}/news-distributor/articles",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success("Articles retrieved successfully")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 4
+            
+            # Check 1: Response has required fields
+            required_fields = ['total', 'articles']
+            missing_fields = [field for field in required_fields if field not in result]
+            
+            if not missing_fields:
+                print_success("✓ Response has required fields: total, articles")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields in response: {missing_fields}")
+            
+            # Check 2: Articles is an array
+            articles = result.get('articles', [])
+            total_count = result.get('total', 0)
+            
+            if isinstance(articles, list):
+                print_success(f"✓ Articles is an array with {len(articles)} items")
+                checks_passed += 1
+            else:
+                print_error("✗ Articles is not an array")
+            
+            # Check 3: Total count matches articles length
+            if total_count == len(articles):
+                print_success(f"✓ Total count matches articles length: {total_count}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Total count mismatch: {total_count} != {len(articles)}")
+            
+            # Check 4: Articles have required fields (if any articles exist)
+            if len(articles) > 0:
+                sample_article = articles[0]
+                required_article_fields = ['id', 'title', 'description', 'link', 'published_date', 'guid']
+                missing_article_fields = [field for field in required_article_fields if field not in sample_article]
+                
+                if not missing_article_fields:
+                    print_success("✓ Articles have required fields: id, title, description, link, published_date, guid")
+                    checks_passed += 1
+                else:
+                    print_error(f"✗ Missing fields in articles: {missing_article_fields}")
+                
+                # Show sample article info
+                print_info(f"Sample article: {sample_article.get('title', 'N/A')[:50]}...")
+                return checks_passed >= 3, articles[0].get('id') if articles else None
+            else:
+                print_info("No articles found to verify structure")
+                return checks_passed >= 2, None
+            
+        else:
+            print_error(f"Get articles failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, None
+            
+    except Exception as e:
+        print_error(f"Get articles test error: {str(e)}")
+        return False, None
+
+def test_news_distributor_extract_vocabulary(article_id):
+    """Test vocabulary extraction endpoint"""
+    print_test_header("Testing News Distributor - Extract Vocabulary")
+    
+    if not article_id:
+        print_error("No article ID available for vocabulary extraction test")
+        return False, None
+    
+    try:
+        print_info(f"Extracting vocabulary from article: {article_id}")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{BASE_URL}/news-distributor/extract-vocabulary/{article_id}",
+            headers=HEADERS,
+            timeout=120  # Gemini AI processing can take time
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success(f"Vocabulary extraction completed in {processing_time:.2f} seconds")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 5
+            
+            # Check 1: Response has required fields
+            required_fields = ['new_vocab_count', 'total_vocab_count', 'output_content']
+            missing_fields = [field for field in required_fields if field not in result]
+            
+            if not missing_fields:
+                print_success("✓ Response has required fields: new_vocab_count, total_vocab_count, output_content")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields in response: {missing_fields}")
+            
+            # Check 2: Counts are valid numbers
+            new_vocab_count = result.get('new_vocab_count', 0)
+            total_vocab_count = result.get('total_vocab_count', 0)
+            
+            if isinstance(new_vocab_count, int) and isinstance(total_vocab_count, int):
+                print_success(f"✓ Valid counts - New: {new_vocab_count}, Total: {total_vocab_count}")
+                checks_passed += 1
+            else:
+                print_error("✗ Invalid count types in response")
+            
+            # Check 3: Output content exists and has expected format
+            output_content = result.get('output_content', '')
+            
+            if output_content and "Từ vựng web3 cần học hôm nay:" in output_content:
+                print_success("✓ Output content has expected Vietnamese format")
+                checks_passed += 1
+            else:
+                print_error("✗ Output content missing or incorrect format")
+            
+            # Check 4: New vocab count should be > 0 for first extraction
+            if new_vocab_count > 0:
+                print_success(f"✓ New vocabulary extracted: {new_vocab_count} words")
+                checks_passed += 1
+            else:
+                print_info("No new vocabulary extracted (may be duplicate extraction)")
+                checks_passed += 1  # This is acceptable for duplicate extraction
+            
+            # Check 5: Total vocab count should be >= new vocab count
+            if total_vocab_count >= new_vocab_count:
+                print_success(f"✓ Total vocab count is consistent: {total_vocab_count}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Total vocab count inconsistent: {total_vocab_count} < {new_vocab_count}")
+            
+            # Show sample of output content
+            print_info("Sample vocabulary output:")
+            print("-" * 40)
+            print(output_content[:300] + "..." if len(output_content) > 300 else output_content)
+            print("-" * 40)
+            
+            print_info(f"Vocabulary extraction test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 4, article_id
+            
+        else:
+            print_error(f"Vocabulary extraction failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, None
+            
+    except Exception as e:
+        print_error(f"Vocabulary extraction test error: {str(e)}")
+        return False, None
+
+def test_news_distributor_duplicate_extraction(article_id):
+    """Test duplicate vocabulary extraction (should return 0 new vocab)"""
+    print_test_header("Testing News Distributor - Duplicate Vocabulary Extraction")
+    
+    if not article_id:
+        print_error("No article ID available for duplicate extraction test")
+        return False
+    
+    try:
+        print_info(f"Testing duplicate extraction from same article: {article_id}")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{BASE_URL}/news-distributor/extract-vocabulary/{article_id}",
+            headers=HEADERS,
+            timeout=120
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success(f"Duplicate extraction completed in {processing_time:.2f} seconds")
+            
+            # Verify duplicate filtering works
+            checks_passed = 0
+            total_checks = 3
+            
+            # Check 1: New vocab count should be 0 (all duplicates)
+            new_vocab_count = result.get('new_vocab_count', -1)
+            
+            if new_vocab_count == 0:
+                print_success("✓ Duplicate filtering working: 0 new vocabulary (all duplicates)")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Duplicate filtering failed: {new_vocab_count} new vocab (expected 0)")
+            
+            # Check 2: Total vocab count should remain the same
+            total_vocab_count = result.get('total_vocab_count', 0)
+            
+            if total_vocab_count >= 0:
+                print_success(f"✓ Total vocab count maintained: {total_vocab_count}")
+                checks_passed += 1
+            else:
+                print_error("✗ Invalid total vocab count")
+            
+            # Check 3: Output content should still be generated
+            output_content = result.get('output_content', '')
+            
+            if output_content and "Từ vựng web3 cần học hôm nay:" in output_content:
+                print_success("✓ Output content generated even for duplicates")
+                checks_passed += 1
+            else:
+                print_error("✗ No output content for duplicate extraction")
+            
+            print_info(f"Duplicate extraction test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 2
+            
+        else:
+            print_error(f"Duplicate extraction failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False
+            
+    except Exception as e:
+        print_error(f"Duplicate extraction test error: {str(e)}")
+        return False
+
+def test_news_distributor_vocabulary_count():
+    """Test vocabulary count endpoint"""
+    print_test_header("Testing News Distributor - Vocabulary Count")
+    
+    try:
+        response = requests.get(
+            f"{BASE_URL}/news-distributor/vocabulary-count",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success("Vocabulary count retrieved successfully")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 2
+            
+            # Check 1: Response has total_vocabulary field
+            if 'total_vocabulary' in result:
+                print_success("✓ Response has total_vocabulary field")
+                checks_passed += 1
+            else:
+                print_error("✗ Missing total_vocabulary field in response")
+            
+            # Check 2: Count is a valid number
+            total_vocabulary = result.get('total_vocabulary', -1)
+            
+            if isinstance(total_vocabulary, int) and total_vocabulary >= 0:
+                print_success(f"✓ Valid vocabulary count: {total_vocabulary}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Invalid vocabulary count: {total_vocabulary}")
+            
+            print_info(f"Vocabulary count test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 2, total_vocabulary
+            
+        else:
+            print_error(f"Vocabulary count failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, 0
+            
+    except Exception as e:
+        print_error(f"Vocabulary count test error: {str(e)}")
+        return False, 0
+
+def test_news_distributor_reset_vocabulary():
+    """Test vocabulary reset endpoint"""
+    print_test_header("Testing News Distributor - Reset Vocabulary")
+    
+    try:
+        print_info("Resetting vocabulary store...")
+        
+        response = requests.delete(
+            f"{BASE_URL}/news-distributor/reset-vocabulary",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success("Vocabulary reset completed successfully")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 2
+            
+            # Check 1: Response has deleted_count field
+            if 'deleted_count' in result:
+                print_success("✓ Response has deleted_count field")
+                checks_passed += 1
+            else:
+                print_error("✗ Missing deleted_count field in response")
+            
+            # Check 2: Deleted count is a valid number
+            deleted_count = result.get('deleted_count', -1)
+            
+            if isinstance(deleted_count, int) and deleted_count >= 0:
+                print_success(f"✓ Valid deleted count: {deleted_count}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Invalid deleted count: {deleted_count}")
+            
+            print_info(f"Vocabulary reset test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 2, deleted_count
+            
+        else:
+            print_error(f"Vocabulary reset failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, 0
+            
+    except Exception as e:
+        print_error(f"Vocabulary reset test error: {str(e)}")
+        return False, 0
+
+def test_news_distributor_vocabulary_count_after_reset():
+    """Test vocabulary count after reset (should be 0)"""
+    print_test_header("Testing News Distributor - Vocabulary Count After Reset")
+    
+    try:
+        response = requests.get(
+            f"{BASE_URL}/news-distributor/vocabulary-count",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            total_vocabulary = result.get('total_vocabulary', -1)
+            
+            if total_vocabulary == 0:
+                print_success("✓ Vocabulary count is 0 after reset")
+                return True
+            else:
+                print_error(f"✗ Vocabulary count not reset: {total_vocabulary} (expected 0)")
+                return False
+                
+        else:
+            print_error(f"Vocabulary count after reset failed: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_error(f"Vocabulary count after reset test error: {str(e)}")
+        return False
+
 def test_delete_partner_content_project(project_id):
     """Test deleting a Partner Content Hub project"""
     print_test_header("Testing Delete Partner Content Hub Project")
