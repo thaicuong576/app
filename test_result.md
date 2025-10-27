@@ -964,6 +964,69 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
+      🎯 COOLDOWN TRACKING ENHANCEMENT HOÀN THÀNH!
+      
+      ✅ USER ISSUE RESOLVED:
+      - Vấn đề: 4 API keys nhưng vẫn bị overload nhanh
+      - Root cause: Hệ thống không "nhớ" keys đang bị rate limit
+      - Solution: Implement intelligent cooldown tracking system
+      
+      🔧 WHAT WAS IMPLEMENTED:
+      
+      1. **Cooldown Tracking Dictionary:**
+         - Track timestamp khi key bị rate limit
+         - Cooldown period: 60 seconds
+         - Auto-cleanup khi key recovered
+      
+      2. **Smart Key Selection:**
+         - get_available_keys(): Return only keys NOT in cooldown
+         - is_key_in_cooldown(): Real-time status check
+         - mark_key_rate_limited(): Mark with timestamp
+      
+      3. **Enhanced Failover Logic:**
+         - ⏭️ SKIP keys in cooldown (don't waste attempts)
+         - 🔄 ONLY try available keys
+         - 📊 Detailed status logging
+         - 🔒 Auto-mark rate limited keys
+      
+      4. **Comprehensive Logging:**
+         - Initial key status (AVAILABLE vs COOLDOWN)
+         - Available count (X/Y keys)
+         - Skip notifications with time remaining
+         - Attempt tracking
+         - Final status breakdown
+      
+      📊 HOW IT WORKS:
+      - Request 1: Key 1 overload (cooldown 60s) → Key 2 success ✅
+      - Request 2: Skip Key 1 (59s cooldown) → Key 2 overload (cooldown 60s) → Key 3 success ✅
+      - Request 3: Skip Key 1,2 (cooldown) → Key 3 success ✅
+      - After 60s: Key 1 available lại → auto-recover!
+      
+      🎯 BENEFITS:
+      - ✅ No wasted attempts on rate limited keys
+      - ✅ Better load distribution
+      - ✅ Automatic recovery
+      - ✅ Clear visibility via logs
+      - ✅ Reduced "all keys overloaded" scenarios
+      - ✅ Better user experience
+      
+      🚀 STATUS:
+      - Implementation: COMPLETE ✓
+      - Backend restart: SUCCESS ✓
+      - Service healthy: YES ✓
+      - No errors: CLEAN ✓
+      
+      ⚠️ TESTING NEEDED:
+      1. Multiple rapid requests to trigger rate limits
+      2. Verify skip logic for cooldown keys
+      3. Check log output for status details
+      4. Verify keys recover after 60s
+      5. Test "all keys cooldown" scenario
+      6. Confirm round-robin still works
+      
+      Backend testing agent should verify the new cooldown tracking system works correctly!
+  - agent: "main"
+    message: |
       Đã hoàn thành việc nâng cấp AI prompts theo yêu cầu:
       
       BACKEND CHANGES:
