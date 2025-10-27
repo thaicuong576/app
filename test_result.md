@@ -956,8 +956,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "News Generator Feature - Backend API"
-    - "News Generator Feature - Frontend UI"
+    - "Multi-API Key Failover System - Cooldown Tracking Enhancement"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
