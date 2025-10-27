@@ -1680,7 +1680,7 @@ async def extract_vocabulary(article_id: str):
         content = article.get("content", "") or article.get("description", "")
         title = article.get("title", "")
         
-        if not content:
+        if not content or content.strip() == "...":
             raise HTTPException(status_code=400, detail="Article has no content to analyze")
         
         # Use the new Google API key
