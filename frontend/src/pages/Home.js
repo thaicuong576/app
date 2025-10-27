@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Newspaper, Users, Globe, ArrowRight } from 'lucide-react';
+import { FileText, Newspaper, Users, Globe, Rss, ArrowRight } from 'lucide-react';
 
 const Home = () => {
 
