@@ -1135,7 +1135,9 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "News Distributor API endpoints - RSS & Vocabulary Extraction"
+    - "News Distributor Feature - Frontend UI"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
