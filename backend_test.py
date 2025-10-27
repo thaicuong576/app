@@ -1655,6 +1655,37 @@ def main():
     if url_project_id:
         test_delete_partner_content_project(url_project_id)
     
+    # NEWS DISTRIBUTOR TESTS
+    print_test_header("NEWS DISTRIBUTOR FEATURE TESTING")
+    
+    # Test 18: RSS Feed Refresh
+    rss_success, total_articles = test_news_distributor_refresh_rss()
+    test_results['news_distributor_refresh_rss'] = rss_success
+    
+    # Test 19: Get Articles List
+    articles_success, sample_article_id = test_news_distributor_get_articles()
+    test_results['news_distributor_get_articles'] = articles_success
+    
+    # Test 20: Extract Vocabulary (first time)
+    vocab_success, test_article_id = test_news_distributor_extract_vocabulary(sample_article_id)
+    test_results['news_distributor_extract_vocabulary'] = vocab_success
+    
+    # Test 21: Extract Vocabulary (duplicate - should return 0 new vocab)
+    duplicate_success = test_news_distributor_duplicate_extraction(test_article_id)
+    test_results['news_distributor_duplicate_extraction'] = duplicate_success
+    
+    # Test 22: Get Vocabulary Count
+    count_success, vocab_count = test_news_distributor_vocabulary_count()
+    test_results['news_distributor_vocabulary_count'] = count_success
+    
+    # Test 23: Reset Vocabulary
+    reset_success, deleted_count = test_news_distributor_reset_vocabulary()
+    test_results['news_distributor_reset_vocabulary'] = reset_success
+    
+    # Test 24: Verify Vocabulary Count After Reset (should be 0)
+    count_after_reset_success = test_news_distributor_vocabulary_count_after_reset()
+    test_results['news_distributor_vocabulary_count_after_reset'] = count_after_reset_success
+    
     # Summary
     print_test_header("TEST SUMMARY")
     passed_tests = sum(test_results.values())
@@ -1681,16 +1712,25 @@ def main():
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"  {test_name.replace('_', ' ').title()}: {status}")
     
+    print("\nNEWS DISTRIBUTOR TESTS:")
+    news_tests = ['news_distributor_refresh_rss', 'news_distributor_get_articles', 'news_distributor_extract_vocabulary', 'news_distributor_duplicate_extraction', 'news_distributor_vocabulary_count', 'news_distributor_reset_vocabulary', 'news_distributor_vocabulary_count_after_reset']
+    for test_name in news_tests:
+        result = test_results[test_name]
+        status = "✅ PASS" if result else "❌ FAIL"
+        print(f"  {test_name.replace('_', ' ').title()}: {status}")
+    
     print(f"\nOverall Result: {passed_tests}/{total_tests} tests passed")
     
     # Detailed analysis
     partner_passed = sum(test_results[test] for test in partner_tests)
     image_passed = sum(test_results[test] for test in image_tests)
     kol_passed = sum(test_results[test] for test in kol_tests)
+    news_passed = sum(test_results[test] for test in news_tests)
     
     print(f"Partner Content Hub: {partner_passed}/{len(partner_tests)} tests passed")
     print(f"Image Extraction & Download: {image_passed}/{len(image_tests)} tests passed")
     print(f"KOL Post Feature: {kol_passed}/{len(kol_tests)} tests passed")
+    print(f"News Distributor Feature: {news_passed}/{len(news_tests)} tests passed")
     
     if passed_tests == total_tests:
         print_success("🎉 All tests passed! Backend APIs are working correctly.")
