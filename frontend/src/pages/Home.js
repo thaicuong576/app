@@ -36,6 +36,14 @@ const Home = () => {
       icon: Globe,
       path: '/social-to-website',
       gradient: 'from-green-500 to-emerald-600'
+    },
+    {
+      id: 'news-distributor',
+      title: 'News Distributor',
+      description: 'Thu thập từ vựng Web3 từ tin tức CoinDesk',
+      icon: Rss,
+      path: '/news-distributor',
+      gradient: 'from-red-500 to-orange-600'
     }
   ];
 
