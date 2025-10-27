@@ -305,6 +305,30 @@ class SocialPostGenerate(BaseModel):
 class SocialPostUpdate(BaseModel):
     generated_content: str
 
+# News Distributor Models
+class RSSNewsArticle(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    description: Optional[str] = None
+    link: str
+    content: Optional[str] = None
+    published_date: Optional[str] = None
+    guid: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class VocabularyItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    word: str  # lowercase for case-insensitive matching
+    original_word: str  # original case
+    vietnamese_definition: str
+    collected_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    source_article_id: Optional[str] = None
+    source_article_title: Optional[str] = None
+
 # Helper functions
 async def download_image(image_url: str, project_id: str) -> Optional[str]:
     """Download image and return local path"""
