@@ -1042,6 +1042,92 @@ frontend:
           - Vietnamese UI với emojis theo context document
           - Full CRUD support: Create → Read → Update → Delete
 
+  - task: "News Distributor Feature - Frontend UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/NewsDistributor.js, /app/frontend/src/pages/Home.js, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã tạo UI hoàn chỉnh cho News Distributor:
+          
+          HOME PAGE UPDATE:
+          - Thêm feature card thứ 5: "News Distributor"
+          - Icon: Rss (RSS icon)
+          - Gradient: from-red-500 to-orange-600 (RSS colors)
+          - Description: "Thu thập từ vựng Web3 từ tin tức CoinDesk"
+          - Path: /news-distributor
+          
+          NEWS DISTRIBUTOR PAGE:
+          - Header:
+            * Home button để quay về dashboard
+            * RSS icon với gradient red-orange
+            * Title: "News Distributor"
+            * Vocabulary count display (real-time)
+          
+          - Section 1: RSS Control
+            * Button "Làm mới RSS Feed" với loading state
+            * Display: "Đã lưu X bài viết"
+            * Refresh icon animation khi loading
+          
+          - Section 2: Article Selection
+            * Search bar để tìm kiếm bài viết (case-insensitive)
+            * Searchable dropdown với danh sách articles
+            * Show: title + published date (Vietnamese format)
+            * Selected article preview:
+              • Title, description, link to original
+              • "Xem bài gốc" button
+          
+          - Section 3: Vocabulary Extraction
+            * Button "Trích xuất từ vựng" (disabled khi chưa chọn article)
+            * Loading state với spinner animation
+            * Output display area với format template
+            * Pre-formatted text display (whitespace preserved)
+          
+          - Section 4: Output Display
+            * Show generated vocabulary output
+            * Border với red-200 color
+            * Copy button để copy vào clipboard
+            * Formatted với font-mono
+          
+          - Section 5: Vocabulary Management
+            * Display: "Đã thu thập X từ vựng"
+            * Button "Reset kho từ vựng" (red, with confirm dialog)
+            * Confirm dialog trước khi reset
+          
+          - UI/UX Features:
+            * Color scheme: Red-Orange (#ef4444 to #f97316)
+            * Responsive design
+            * Toast notifications cho tất cả actions
+            * Loading states cho async operations
+            * Error handling với toast messages
+            * Disabled states cho buttons
+            * Search functionality cho article list
+          
+          - State Management:
+            * articles (array từ API)
+            * selectedArticleId (dropdown value)
+            * vocabularyOutput (AI generated content)
+            * totalArticles (count)
+            * totalVocabulary (count)
+            * searchTerm (filter articles)
+            * Loading states: isRefreshing, isExtracting, isResetting
+          
+          - API Integration:
+            * POST /api/news-distributor/refresh-rss
+            * GET /api/news-distributor/articles
+            * POST /api/news-distributor/extract-vocabulary/{id}
+            * DELETE /api/news-distributor/reset-vocabulary
+            * GET /api/news-distributor/vocabulary-count
+          
+          APP.JS UPDATE:
+          - Import NewsDistributor component
+          - Add route: "/news-distributor" → <NewsDistributor />
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
