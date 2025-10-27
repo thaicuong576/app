@@ -1579,6 +1579,264 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
         logging.error(f"Social post generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Social post generation failed: {str(e)}")
 
+# ========================================
+# NEWS DISTRIBUTOR ENDPOINTS
+# ========================================
+
+@api_router.post("/news-distributor/refresh-rss")
+async def refresh_rss_feed():
+    """Fetch and parse RSS feed from CoinDesk, save articles to database"""
+    try:
+        import feedparser
+        
+        RSS_URL = "https://www.coindesk.com/arc/outboundfeeds/rss/"
+        logging.info(f"📡 Fetching RSS feed from: {RSS_URL}")
+        
+        # Parse RSS feed
+        feed = feedparser.parse(RSS_URL)
+        
+        if not feed.entries:
+            raise HTTPException(status_code=404, detail="No articles found in RSS feed")
+        
+        articles_saved = 0
+        articles_updated = 0
+        
+        for entry in feed.entries:
+            # Extract data from RSS entry
+            article_data = {
+                "title": entry.get("title", ""),
+                "description": entry.get("summary", ""),
+                "link": entry.get("link", ""),
+                "content": entry.get("content", [{}])[0].get("value", "") if entry.get("content") else entry.get("summary", ""),
+                "published_date": entry.get("published", ""),
+                "guid": entry.get("id", entry.get("link", ""))
+            }
+            
+            # Check if article already exists (by guid)
+            existing = await db.rss_news_articles.find_one({"guid": article_data["guid"]})
+            
+            if existing:
+                articles_updated += 1
+                # Update existing article
+                await db.rss_news_articles.update_one(
+                    {"guid": article_data["guid"]},
+                    {"$set": article_data}
+                )
+            else:
+                articles_saved += 1
+                # Create new article
+                article = RSSNewsArticle(
+                    **article_data
+                )
+                await db.rss_news_articles.insert_one(article.dict())
+        
+        total_articles = await db.rss_news_articles.count_documents({})
+        
+        logging.info(f"✅ RSS refresh complete: {articles_saved} new, {articles_updated} updated, {total_articles} total")
+        
+        return {
+            "message": "RSS feed refreshed successfully",
+            "articles_saved": articles_saved,
+            "articles_updated": articles_updated,
+            "total_articles": total_articles
+        }
+    
+    except Exception as e:
+        logging.error(f"RSS refresh error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to refresh RSS feed: {str(e)}")
+
+@api_router.get("/news-distributor/articles")
+async def get_rss_articles():
+    """Get all RSS articles for dropdown selection"""
+    try:
+        articles = await db.rss_news_articles.find().sort("created_at", -1).to_list(length=None)
+        
+        return {
+            "total": len(articles),
+            "articles": articles
+        }
+    
+    except Exception as e:
+        logging.error(f"Error fetching articles: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch articles: {str(e)}")
+
+@api_router.post("/news-distributor/extract-vocabulary/{article_id}")
+async def extract_vocabulary(article_id: str):
+    """Extract vocabulary from a specific article using Gemini AI"""
+    try:
+        # Get article from database
+        article = await db.rss_news_articles.find_one({"id": article_id})
+        
+        if not article:
+            raise HTTPException(status_code=404, detail="Article not found")
+        
+        # Get existing vocabulary (case-insensitive)
+        existing_vocab = await db.vocabulary.find().to_list(length=None)
+        existing_words_lowercase = {v["word"].lower() for v in existing_vocab}
+        
+        logging.info(f"📚 Existing vocabulary count: {len(existing_words_lowercase)}")
+        
+        # Prepare content for AI analysis
+        content = article.get("content", "") or article.get("description", "")
+        title = article.get("title", "")
+        
+        if not content:
+            raise HTTPException(status_code=400, detail="Article has no content to analyze")
+        
+        # Use the new Google API key
+        NEWS_DISTRIBUTOR_API_KEY = "AIzaSyDWdYyrmShutcw7LID_MFeKWl2tWhwBccc"
+        
+        # Create Gemini prompt for vocabulary extraction
+        system_prompt = """Bạn là chuyên gia phân tích từ vựng chuyên ngành crypto, blockchain, finance và kinh tế.
+
+NHIỆM VỤ:
+Phân tích nội dung tiếng Anh và trích xuất các từ vựng đáp ứng CẢ HAI tiêu chí sau:
+
+TIÊU CHÍ 1 (ít nhất 1 trong các lĩnh vực):
+- Crypto-related (Bitcoin, DeFi, NFT, Web3, etc.)
+- Blockchain/Web3 related (smart contracts, layer 2, consensus, etc.)
+- Finance related (trading, investment, market, etc.)
+- Micro/Macroeconomics related (inflation, GDP, interest rate, etc.)
+
+TIÊU CHÍ 2:
+- Trình độ từ B2 đến C2 (từ vựng nâng cao/chuyên ngành, KHÔNG phải từ cơ bản như "the", "is", "have")
+
+YÊU CẦU ĐỊNH NGHĨA:
+- Nghĩa tiếng Việt NGẮN GỌN: từ 1-6 từ
+- Không giải thích dài dòng
+- Tập trung vào nghĩa chính trong ngữ cảnh crypto/finance
+
+OUTPUT FORMAT (BẮT BUỘC):
+Từ vựng web3 cần học hôm nay:
+Vocab_1 - Nghĩa tiếng Việt (1-6 từ)
+Vocab_2 - Nghĩa tiếng Việt (1-6 từ)
+Vocab_3 - Nghĩa tiếng Việt (1-6 từ)
+
+CHÚ Ý:
+- Mỗi từ vựng MỘT DÒNG, format: "Word - Definition"
+- Không thêm số thứ tự, bullet points, hoặc ký tự đặc biệt
+- Không thêm bất kỳ text nào khác ngoài template trên"""
+
+        user_prompt = f"""Title: {title}
+
+Content:
+{content}
+
+Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu."""
+
+        logging.info(f"🤖 Calling Gemini AI for vocabulary extraction...")
+        
+        # Call Gemini API
+        llm_chat = LlmChat(
+            model="gemini-2.0-flash-exp",
+            api_key=NEWS_DISTRIBUTOR_API_KEY,
+            provider="google"
+        )
+        
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await llm_chat.send_chat_request(messages)
+        generated_content = response["content"]
+        
+        logging.info(f"✅ AI response received: {len(generated_content)} characters")
+        
+        # Parse vocabulary from AI response
+        new_vocab_list = []
+        lines = generated_content.split("\n")
+        
+        for line in lines:
+            line = line.strip()
+            # Skip empty lines and the header line
+            if not line or "Từ vựng web3" in line or "cần học hôm nay" in line:
+                continue
+            
+            # Parse format: "Word - Definition"
+            if " - " in line:
+                parts = line.split(" - ", 1)
+                if len(parts) == 2:
+                    word = parts[0].strip()
+                    definition = parts[1].strip()
+                    
+                    # Check if word already exists (case-insensitive)
+                    if word.lower() not in existing_words_lowercase:
+                        # Add to database
+                        vocab_item = VocabularyItem(
+                            word=word.lower(),  # lowercase for matching
+                            original_word=word,  # keep original case
+                            vietnamese_definition=definition,
+                            source_article_id=article_id,
+                            source_article_title=title
+                        )
+                        await db.vocabulary.insert_one(vocab_item.dict())
+                        
+                        new_vocab_list.append({
+                            "word": word,
+                            "definition": definition
+                        })
+                        
+                        # Add to existing set for this session
+                        existing_words_lowercase.add(word.lower())
+        
+        # Format output
+        if new_vocab_list:
+            output_lines = ["Từ vựng web3 cần học hôm nay:"]
+            for item in new_vocab_list:
+                output_lines.append(f"{item['word']} - {item['definition']}")
+            output_content = "\n".join(output_lines)
+        else:
+            output_content = "Không có từ vựng mới (tất cả từ đã được thu thập trước đó)."
+        
+        total_vocab_count = await db.vocabulary.count_documents({})
+        
+        logging.info(f"✅ Extracted {len(new_vocab_list)} new vocabulary items")
+        
+        return {
+            "article_title": title,
+            "new_vocab_count": len(new_vocab_list),
+            "total_vocab_count": total_vocab_count,
+            "output_content": output_content
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Vocabulary extraction error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to extract vocabulary: {str(e)}")
+
+@api_router.delete("/news-distributor/reset-vocabulary")
+async def reset_vocabulary():
+    """Reset (delete all) vocabulary store"""
+    try:
+        result = await db.vocabulary.delete_many({})
+        
+        logging.info(f"🗑️ Vocabulary store reset: {result.deleted_count} items deleted")
+        
+        return {
+            "message": "Vocabulary store reset successfully",
+            "deleted_count": result.deleted_count
+        }
+    
+    except Exception as e:
+        logging.error(f"Vocabulary reset error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to reset vocabulary: {str(e)}")
+
+@api_router.get("/news-distributor/vocabulary-count")
+async def get_vocabulary_count():
+    """Get current vocabulary count"""
+    try:
+        count = await db.vocabulary.count_documents({})
+        
+        return {
+            "total_vocabulary": count
+        }
+    
+    except Exception as e:
+        logging.error(f"Error getting vocabulary count: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get vocabulary count: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
