@@ -1743,20 +1743,16 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
 
         logging.info(f"🤖 Calling Gemini AI for vocabulary extraction...")
         
-        # Call Gemini API
+        # Call Gemini API using the same pattern as other endpoints
         llm_chat = LlmChat(
-            model="gemini-2.0-flash-exp",
             api_key=NEWS_DISTRIBUTOR_API_KEY,
-            provider="google"
-        )
+            session_id=f"vocab_extract_{article_id}",
+            system_message=system_prompt
+        ).with_model("gemini", "gemini-2.0-flash-exp")
         
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
-        response = await llm_chat.send_chat_request(messages)
-        generated_content = response["content"]
+        user_message = UserMessage(text=user_prompt)
+        response = await llm_chat.send_message(user_message)
+        generated_content = response.strip()
         
         logging.info(f"✅ AI response received: {len(generated_content)} characters")
         
