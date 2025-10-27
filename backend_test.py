@@ -1544,7 +1544,7 @@ def test_delete_partner_content_project(project_id):
 
 def main():
     """Run all backend tests"""
-    print("🚀 Partner Content Hub & KOL Post - Backend API Testing")
+    print("🚀 Partner Content Hub, KOL Post & News Distributor - Backend API Testing")
     print(f"Testing against: {BASE_URL}")
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -1566,7 +1566,14 @@ def main():
         'get_all_kol_posts': False,
         'get_single_kol_post': False,
         'delete_kol_post': False,
-        'delete_partner_project': False
+        'delete_partner_project': False,
+        'news_distributor_refresh_rss': False,
+        'news_distributor_get_articles': False,
+        'news_distributor_extract_vocabulary': False,
+        'news_distributor_duplicate_extraction': False,
+        'news_distributor_vocabulary_count': False,
+        'news_distributor_reset_vocabulary': False,
+        'news_distributor_vocabulary_count_after_reset': False
     }
     
     # Test 1: API Health Check
