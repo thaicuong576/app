@@ -1649,7 +1649,7 @@ async def refresh_rss_feed():
 async def get_rss_articles():
     """Get all RSS articles for dropdown selection"""
     try:
-        articles = await db.rss_news_articles.find().sort("created_at", -1).to_list(length=None)
+        articles = await db.rss_news_articles.find({}, {"_id": 0}).sort("created_at", -1).to_list(length=None)
         
         return {
             "total": len(articles),
