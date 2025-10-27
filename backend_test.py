@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://api-loadbalancer.preview.emergentagent.com/api"
+BASE_URL = "https://gemini-api-checker.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 # Sample English crypto content for testing
