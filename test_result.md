@@ -856,6 +856,44 @@ backend:
           - DELETE /api/news/{id} - Xóa tin tức
           - Lưu vào MongoDB collection: news_articles
 
+  - task: "News Distributor API endpoints - RSS & Vocabulary Extraction"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Đã implement News Distributor feature hoàn chỉnh:
+          - Models:
+            * RSSNewsArticle: title, description, link, content, published_date, guid
+            * VocabularyItem: word (lowercase), original_word, vietnamese_definition, source info
+          - POST /api/news-distributor/refresh-rss - Fetch RSS từ CoinDesk và lưu vào DB
+            * Parse RSS feed với feedparser library
+            * Auto-update existing articles (by guid)
+            * Save new articles to MongoDB: rss_news_articles collection
+            * Return statistics: articles_saved, articles_updated, total_articles
+          - GET /api/news-distributor/articles - Lấy danh sách tin tức cho dropdown
+            * Sorted by created_at desc
+            * Return total count và articles array
+          - POST /api/news-distributor/extract-vocabulary/{article_id} - Trích xuất từ vựng
+            * Use Gemini AI với API key riêng: AIzaSyDWdYyrmShutcw7LID_MFeKWl2tWhwBccc
+            * System prompt: Extract crypto/web3/finance/blockchain vocab (B2-C2 level)
+            * Vietnamese definitions: 1-6 từ, ngắn gọn
+            * Case-insensitive duplicate filtering (lowercase matching)
+            * Auto-save new vocab to MongoDB: vocabulary collection
+            * Output format: "Từ vựng web3 cần học hôm nay:\nWord - Definition\n..."
+          - DELETE /api/news-distributor/reset-vocabulary - Reset toàn bộ vocab store
+            * Delete all documents from vocabulary collection
+            * Return deleted_count
+          - GET /api/news-distributor/vocabulary-count - Đếm số vocab đã lưu
+            * Return total_vocabulary count
+          - Added feedparser==6.0.11 to requirements.txt
+          - Backend restart thành công
+
 frontend:
   - task: "Cập nhật button labels với emoji tiếng Việt"
     implemented: true
