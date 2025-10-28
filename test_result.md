@@ -1116,7 +1116,7 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: |
-          Đã tạo UI hoàn chỉnh cho News Distributor:
+          Đã tạo UI hoàn chỉnh cho News Distributor (original implementation)
           
           HOME PAGE UPDATE:
           - Thêm feature card thứ 5: "News Distributor"
