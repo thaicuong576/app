@@ -29,6 +29,7 @@ const NewsDistributor = () => {
   useEffect(() => {
     fetchArticles();
     fetchVocabularyCount();
+    fetchAvailableDates();
   }, []);
 
   const fetchArticles = async () => {
@@ -53,6 +54,35 @@ const NewsDistributor = () => {
       setTotalVocabulary(data.total_vocabulary || 0);
     } catch (error) {
       console.error('Error fetching vocabulary count:', error);
+    }
+  };
+
+  const fetchAvailableDates = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/news-distributor/available-dates`);
+      if (!response.ok) throw new Error('Failed to fetch available dates');
+      
+      const data = await response.json();
+      setAvailableDates(data.dates || []);
+    } catch (error) {
+      console.error('Error fetching available dates:', error);
+    }
+  };
+
+  const fetchAllVocabulary = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/news-distributor/vocabulary`);
+      if (!response.ok) throw new Error('Failed to fetch vocabulary');
+      
+      const data = await response.json();
+      setAllVocabulary(data.vocabulary || []);
+    } catch (error) {
+      console.error('Error fetching vocabulary:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách từ vựng: " + error.message,
+        variant: "destructive",
+      });
     }
   };
 
