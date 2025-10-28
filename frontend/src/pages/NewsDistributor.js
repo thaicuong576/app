@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Home, RefreshCw, BookOpen, Trash2, Copy, Loader2, Rss, Search } from 'lucide-react';
+import { Home, RefreshCw, BookOpen, Trash2, Copy, Loader2, Rss, Search, Calendar, Play, X, Eye } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
@@ -15,9 +15,15 @@ const NewsDistributor = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isAutoExtracting, setIsAutoExtracting] = useState(false);
   const [totalArticles, setTotalArticles] = useState(0);
   const [totalVocabulary, setTotalVocabulary] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [availableDates, setAvailableDates] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [allVocabulary, setAllVocabulary] = useState([]);
+  const [showVocabModal, setShowVocabModal] = useState(false);
+  const [vocabSearchTerm, setVocabSearchTerm] = useState('');
 
   // Load initial data
   useEffect(() => {
