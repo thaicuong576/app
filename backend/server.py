@@ -2083,24 +2083,35 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu 
         
         logging.info(f"✅ Received response from Gemini API")
         
-        # Parse vocabulary from response
+        # Parse vocabulary from response - KEEP CATEGORIES
         vocab_list = []
         new_vocab_count = 0
         lines = generated_content.split("\n")
         
         for line in lines:
-            line = line.strip()
-            if not line or "Từ vựng web3" in line or "cần học hôm nay" in line:
+            line_stripped = line.strip()
+            
+            # Skip empty lines and header
+            if not line_stripped or "Từ vựng web3" in line_stripped or "cần học hôm nay" in line_stripped:
                 continue
             
-            if " - " in line:
-                parts = line.split(" - ", 1)
+            # Keep category headers as-is
+            if line_stripped in ["Tài chính & Web3:", "Khác (B2 -> C2):"]:
+                vocab_list.append(line_stripped)
+                continue
+            
+            # Process vocabulary lines (starting with +)
+            if line_stripped.startswith("+") and " - " in line_stripped:
+                # Remove the + prefix for processing
+                line_content = line_stripped[1:].strip()
+                parts = line_content.split(" - ", 1)
+                
                 if len(parts) == 2:
                     word = parts[0].strip()
                     definition = parts[1].strip()
                     
-                    # Add to output list
-                    vocab_list.append(f"{word} - {definition}")
+                    # Add to output list WITH + prefix
+                    vocab_list.append(f"+ {word} - {definition}")
                     
                     # Save to database if not exists (case-insensitive)
                     if word.lower() not in existing_words_lowercase:
