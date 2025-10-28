@@ -1921,6 +1921,7 @@ async def get_available_dates():
     """Get unique dates from RSS articles"""
     try:
         from datetime import datetime
+        from dateutil import parser
         
         articles = await db.rss_news_articles.find({}, {"published_date": 1, "_id": 0}).to_list(length=None)
         
@@ -1930,20 +1931,18 @@ async def get_available_dates():
             pub_date = article.get("published_date", "")
             if pub_date:
                 try:
-                    # Parse date and extract date only (YYYY-MM-DD)
-                    dt = datetime.strptime(pub_date.split("T")[0] if "T" in pub_date else pub_date.split()[0], "%Y-%m-%d")
-                    dates_set.add(dt.strftime("%Y-%m-%d"))
-                except:
-                    # Try alternative parsing
-                    try:
-                        from dateutil import parser
-                        dt = parser.parse(pub_date)
-                        dates_set.add(dt.strftime("%Y-%m-%d"))
-                    except:
-                        continue
+                    # Parse date (format: "Mon, 27 Oct 2025 08:00:52 +0000")
+                    dt = parser.parse(pub_date)
+                    date_str = dt.strftime("%Y-%m-%d")
+                    dates_set.add(date_str)
+                except Exception as e:
+                    logging.warning(f"Failed to parse date: {pub_date} - {e}")
+                    continue
         
-        # Sort dates descending (newest first)
+        # Sort dates (newest first)
         sorted_dates = sorted(list(dates_set), reverse=True)
+        
+        logging.info(f"📅 Available dates: {sorted_dates}")
         
         return {
             "dates": sorted_dates
