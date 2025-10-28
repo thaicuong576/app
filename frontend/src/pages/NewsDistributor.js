@@ -191,6 +191,60 @@ const NewsDistributor = () => {
     }
   };
 
+  const handleAutoExtract = async () => {
+    if (!selectedDate) {
+      toast({
+        title: "Chưa chọn ngày",
+        description: "Vui lòng chọn ngày để tự động trích xuất từ vựng.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAutoExtracting(true);
+    setVocabularyOutput('');
+    
+    try {
+      toast({
+        title: "Bắt đầu xử lý...",
+        description: "Đang tự động trích xuất từ vựng từ tất cả bài viết trong ngày đã chọn.",
+      });
+
+      const response = await fetch(`${BACKEND_URL}/api/news-distributor/auto-extract?selected_date=${selectedDate}`, {
+        method: 'POST'
+      });
+      
+      if (!response.ok) throw new Error('Failed to auto-extract vocabulary');
+      
+      const data = await response.json();
+      
+      toast({
+        title: "Hoàn thành!",
+        description: `Đã xử lý ${data.processed_articles}/${data.total_articles} bài viết. Thu thập ${data.new_vocab_count} từ vựng mới. Tổng: ${data.total_vocab_count} từ.`,
+      });
+      
+      // Update vocabulary count
+      setTotalVocabulary(data.total_vocab_count);
+      
+      // Show summary
+      setVocabularyOutput(`✅ Tự động trích xuất hoàn thành!\n\n📊 Thống kê:\n- Ngày đã chọn: ${selectedDate}\n- Tổng số bài viết: ${data.total_articles}\n- Đã xử lý: ${data.processed_articles} bài\n- Từ vựng mới: ${data.new_vocab_count}\n- Tổng từ vựng: ${data.total_vocab_count}`);
+      
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể tự động trích xuất: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAutoExtracting(false);
+    }
+  };
+
+  const handleViewAllVocabulary = async () => {
+    await fetchAllVocabulary();
+    setShowVocabModal(true);
+  };
+
   const handleCopyOutput = () => {
     if (!vocabularyOutput) {
       toast({
