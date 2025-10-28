@@ -303,7 +303,7 @@ const NewsDistributor = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Rss className="h-5 w-5 text-red-500" />
-                RSS Feed từ CoinDesk
+                RSS Feed từ CoinTelegraph
               </h2>
               <button
                 onClick={handleRefreshRSS}
@@ -319,7 +319,7 @@ const NewsDistributor = () => {
               </button>
             </div>
             <p className="text-gray-600">
-              Đã lưu <span className="font-bold text-red-600">{totalArticles}</span> bài viết từ CoinDesk
+              Đã lưu <span className="font-bold text-red-600">{totalArticles}</span> bài viết từ CoinTelegraph
             </p>
           </div>
 
