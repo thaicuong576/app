@@ -1895,13 +1895,21 @@ async def get_vocabulary_count():
 
 @api_router.get("/news-distributor/vocabulary")
 async def get_all_vocabulary():
-    """Get all vocabulary items with details"""
+    """Get all vocabulary items formatted like a simple txt file"""
     try:
         vocab_items = await db.vocabulary.find({}, {"_id": 0}).sort("created_at", -1).to_list(length=None)
         
+        # Format as simple txt-like output
+        formatted_vocab = []
+        for item in vocab_items:
+            original_word = item.get("original_word", "")
+            definition = item.get("vietnamese_definition", "")
+            formatted_vocab.append(f"{original_word} - {definition}")
+        
         return {
             "total": len(vocab_items),
-            "vocabulary": vocab_items
+            "vocabulary": vocab_items,  # Full data for modal display
+            "formatted_text": "\n".join(formatted_vocab)  # Simple txt format
         }
     
     except Exception as e:
