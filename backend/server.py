@@ -2021,15 +2021,14 @@ CHÚ Ý:
 - Không thêm số thứ tự, bullet points, hoặc ký tự đặc biệt
 - Không thêm bất kỳ text nào khác ngoài template trên"""
         
-        # Store article outputs
-        article_outputs = []
+        # Collect ALL vocab from ALL articles into ONE list
+        all_vocab_list = []
         
         # Process each article
         for article in articles:
             try:
                 article_id = article.get("id", "")
                 title = article.get("title", "")
-                link = article.get("link", "")
                 content = article.get("content", "") or article.get("description", "")
                 
                 if not content or len(content.strip()) < 10:
@@ -2057,9 +2056,8 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
                 response = await llm_chat.send_message(user_message)
                 generated_content = response.strip()
                 
-                # Parse vocabulary and save to DB
-                article_vocab_list = []
-                new_vocab_count = 0
+                # Parse vocabulary and add to master list
+                article_vocab_count = 0
                 lines = generated_content.split("\n")
                 
                 for line in lines:
@@ -2073,8 +2071,9 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
                             word = parts[0].strip()
                             definition = parts[1].strip()
                             
-                            # Add to this article's vocab list (for output)
-                            article_vocab_list.append(f"{word} - {definition}")
+                            # Add to master vocab list (ALL articles combined)
+                            all_vocab_list.append(f"{word} - {definition}")
+                            article_vocab_count += 1
                             
                             # Save to database if not exists
                             if word.lower() not in existing_words_lowercase:
@@ -2088,22 +2087,10 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
                                 await db.vocabulary.insert_one(vocab_item.dict())
                                 
                                 existing_words_lowercase.add(word.lower())
-                                new_vocab_count += 1
                                 total_new_vocab += 1
                 
-                # Create content template for this article
-                if article_vocab_list:
-                    article_output = {
-                        "title": title,
-                        "link": link,
-                        "vocab_count": len(article_vocab_list),
-                        "new_vocab_count": new_vocab_count,
-                        "content_template": "Từ vựng web3 cần học hôm nay:\n" + "\n".join(article_vocab_list)
-                    }
-                    article_outputs.append(article_output)
-                
                 processed_articles += 1
-                logging.info(f"✅ Extracted {len(article_vocab_list)} vocab ({new_vocab_count} new) from: {title[:50]}...")
+                logging.info(f"✅ Extracted {article_vocab_count} vocab from: {title[:50]}...")
                 
             except Exception as e:
                 logging.error(f"Error processing article {title[:50]}: {e}")
@@ -2111,15 +2098,23 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
         
         total_vocab_count = await db.vocabulary.count_documents({})
         
-        logging.info(f"🎉 Auto-extraction complete: {processed_articles} articles, {total_new_vocab} new vocab")
+        # Create ONE content template with ALL vocab
+        output_content = ""
+        if all_vocab_list:
+            output_content = "Từ vựng web3 cần học hôm nay:\n" + "\n".join(all_vocab_list)
+        else:
+            output_content = "Không có từ vựng mới nào được thu thập."
+        
+        logging.info(f"🎉 Auto-extraction complete: {processed_articles} articles, {len(all_vocab_list)} total vocab, {total_new_vocab} new vocab")
         
         return {
             "message": "Auto-extraction completed successfully",
             "total_articles": len(articles),
             "processed_articles": processed_articles,
+            "total_vocab_extracted": len(all_vocab_list),
             "new_vocab_count": total_new_vocab,
             "total_vocab_count": total_vocab_count,
-            "article_outputs": article_outputs
+            "output_content": output_content
         }
     
     except Exception as e:
