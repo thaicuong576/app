@@ -2038,17 +2038,27 @@ YÊU CẦU ĐỊNH NGHĨA:
 - Không giải thích dài dòng
 - Tập trung vào nghĩa chính trong ngữ cảnh crypto/finance
 
+PHÂN LOẠI TỪ VỰNG:
+- Nhóm 1: Tài chính & Web3 (crypto, blockchain, DeFi, trading, investment, etc.)
+- Nhóm 2: Khác (B2 -> C2) (từ vựng chung nâng cao không liên quan trực tiếp crypto/finance)
+
 OUTPUT FORMAT (BẮT BUỘC):
 Từ vựng web3 cần học hôm nay:
-Vocab_1 - Nghĩa tiếng Việt (1-6 từ)
-Vocab_2 - Nghĩa tiếng Việt (1-6 từ)
-Vocab_3 - Nghĩa tiếng Việt (1-6 từ)
-...
+
+Tài chính & Web3:
++ Word_1 - Nghĩa tiếng Việt (1-6 từ)
++ Word_2 - Nghĩa tiếng Việt (1-6 từ)
+
+Khác (B2 -> C2):
++ Word_1 - Nghĩa tiếng Việt (1-6 từ)
++ Word_2 - Nghĩa tiếng Việt (1-6 từ)
 
 CHÚ Ý:
-- Mỗi từ vựng MỘT DÒNG, format: "Word - Definition"
-- Không thêm số thứ tự, bullet points, hoặc ký tự đặc biệt
-- Không thêm bất kỳ text nào khác ngoài template trên
+- Mỗi từ vựng BẮT ĐẦU bằng dấu "+" (QUAN TRỌNG)
+- Format: "+ Word - Definition"
+- Không thêm số thứ tự
+- Phân loại chính xác vào đúng nhóm
+- Nếu nhóm nào KHÔNG có từ vựng thì KHÔNG hiển thị nhóm đó
 - Trích xuất từ TẤT CẢ các tin tức trong nhóm"""
         
         # Prepare prompt with COMBINED content from ALL articles
