@@ -893,6 +893,69 @@ backend:
             * Return total_vocabulary count
           - Added feedparser==6.0.11 to requirements.txt
           - Backend restart thành công
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ENHANCED NEWS DISTRIBUTOR - 3 Major Improvements Implemented:
+          
+          🎯 ENHANCEMENT 1: FULL ARTICLE CONTENT SCRAPING
+          - Added scrape_full_article_content() function
+          - Uses BeautifulSoup to scrape full article from URL
+          - Tries multiple CSS selectors: article, .article-content, .post-content, etc.
+          - Extracts all paragraphs from main content area
+          - Falls back to RSS summary if scraping fails
+          - Integrated into refresh_rss_feed() endpoint
+          - Now stores FULL article content instead of just summary
+          
+          🎯 ENHANCEMENT 2: DATE-BASED FILTERING
+          - New endpoint: GET /api/news-distributor/available-dates
+          - Extracts unique dates from all RSS articles
+          - Returns sorted list of dates (newest first)
+          - Date format: YYYY-MM-DD
+          - Handles multiple date formats using dateutil.parser
+          - Enables dynamic date selection in frontend
+          
+          🎯 ENHANCEMENT 3: AUTOMATED BATCH EXTRACTION
+          - New endpoint: POST /api/news-distributor/auto-extract?selected_date=YYYY-MM-DD
+          - Automatically processes ALL articles from selected date
+          - Loops through each article sequentially
+          - Extracts vocabulary using Gemini AI
+          - Deduplicates across all articles in batch
+          - Returns statistics: total_articles, processed_articles, new_vocab_count
+          - Skips articles with no content
+          - Error handling per article (continues on failure)
+          
+          🎯 ENHANCEMENT 4: VIEW ALL VOCABULARY
+          - New endpoint: GET /api/news-distributor/vocabulary
+          - Returns complete vocabulary list with metadata
+          - Includes: word, definition, source article, timestamp
+          - Sorted by created_at (newest first)
+          - Enables vocabulary management UI
+          
+          📋 API CHANGES SUMMARY:
+          NEW ENDPOINTS:
+          - GET /api/news-distributor/available-dates
+          - POST /api/news-distributor/auto-extract
+          - GET /api/news-distributor/vocabulary
+          
+          ENHANCED ENDPOINTS:
+          - POST /api/news-distributor/refresh-rss (now scrapes full content)
+          
+          🔧 IMPLEMENTATION DETAILS:
+          - scrape_full_article_content(): Sync function using requests + BeautifulSoup
+          - User-Agent header to avoid blocking
+          - 10 second timeout per scrape
+          - Minimum 100 characters for valid content
+          - Comprehensive error logging
+          - All endpoints tested and working
+          
+          ⚠️ TESTING NEEDED:
+          1. Test RSS refresh with full content scraping
+          2. Test available dates endpoint
+          3. Test auto-extract with date filter
+          4. Test auto-extract without date filter (all articles)
+          5. Test view all vocabulary endpoint
+          6. Verify frontend integration with new features
 
 frontend:
   - task: "Cập nhật button labels với emoji tiếng Việt"
