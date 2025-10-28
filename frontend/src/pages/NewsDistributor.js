@@ -468,27 +468,126 @@ const NewsDistributor = () => {
           {/* Vocabulary Management Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Quản lý kho từ vựng</h2>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="text-gray-600">
                 Tổng số từ vựng đã thu thập: <span className="font-bold text-red-600">{totalVocabulary}</span>
               </div>
-              <button
-                onClick={handleResetVocabulary}
-                disabled={isResetting}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                {isResetting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                {isResetting ? 'Đang reset...' : 'Reset kho từ vựng'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleViewAllVocabulary}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Eye className="h-4 w-4" />
+                  Xem tất cả từ vựng
+                </button>
+                <button
+                  onClick={handleResetVocabulary}
+                  disabled={isResetting}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isResetting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  {isResetting ? 'Đang reset...' : 'Reset kho từ vựng'}
+                </button>
+              </div>
             </div>
           </div>
 
         </div>
       </div>
+
+      {/* Vocabulary Modal */}
+      {showVocabModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-red-500" />
+                Kho từ vựng Web3 ({allVocabulary.length} từ)
+              </h2>
+              <button
+                onClick={() => setShowVocabModal(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Search Bar in Modal */}
+            <div className="p-4 border-b">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm từ vựng..."
+                  value={vocabSearchTerm}
+                  onChange={(e) => setVocabSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {allVocabulary.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>Chưa có từ vựng nào được thu thập.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {allVocabulary
+                    .filter(item => 
+                      vocabSearchTerm === '' || 
+                      item.original_word.toLowerCase().includes(vocabSearchTerm.toLowerCase()) ||
+                      item.vietnamese_definition.toLowerCase().includes(vocabSearchTerm.toLowerCase())
+                    )
+                    .map((item, index) => (
+                      <div 
+                        key={item.id || index}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-red-300 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-lg text-gray-900">{item.original_word}</span>
+                              <span className="text-sm text-gray-500">-</span>
+                              <span className="text-gray-700">{item.vietnamese_definition}</span>
+                            </div>
+                            {item.source_article_title && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                📰 Nguồn: {item.source_article_title}
+                              </p>
+                            )}
+                            {item.created_at && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                Thêm lúc: {new Date(item.created_at).toLocaleString('vi-VN')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t bg-gray-50">
+              <button
+                onClick={() => setShowVocabModal(false)}
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
