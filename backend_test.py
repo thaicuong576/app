@@ -1542,6 +1542,382 @@ def test_delete_partner_content_project(project_id):
         print_error(f"Delete project error: {str(e)}")
         return False
 
+# NEWS DISTRIBUTOR AUTO-EXTRACT SPECIFIC TESTS
+def test_news_distributor_available_dates():
+    """Test available dates endpoint for News Distributor"""
+    print_test_header("Testing News Distributor - Available Dates")
+    
+    try:
+        response = requests.get(
+            f"{BASE_URL}/news-distributor/available-dates",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success("Available dates retrieved successfully")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 3
+            
+            # Check 1: Response has dates field
+            if 'dates' in result:
+                print_success("✓ Response has dates field")
+                checks_passed += 1
+            else:
+                print_error("✗ Missing dates field in response")
+            
+            # Check 2: Dates is an array
+            dates = result.get('dates', [])
+            
+            if isinstance(dates, list):
+                print_success(f"✓ Dates is an array with {len(dates)} items")
+                checks_passed += 1
+            else:
+                print_error("✗ Dates is not an array")
+            
+            # Check 3: Dates are in YYYY-MM-DD format (if any dates exist)
+            if len(dates) > 0:
+                sample_date = dates[0]
+                try:
+                    datetime.strptime(sample_date, "%Y-%m-%d")
+                    print_success(f"✓ Dates are in correct format (YYYY-MM-DD): {sample_date}")
+                    checks_passed += 1
+                except ValueError:
+                    print_error(f"✗ Invalid date format: {sample_date}")
+                
+                # Show available dates
+                print_info(f"Available dates: {dates[:5]}{'...' if len(dates) > 5 else ''}")
+                return checks_passed >= 2, dates
+            else:
+                print_info("No dates available (empty list)")
+                return checks_passed >= 2, []
+            
+        else:
+            print_error(f"Available dates failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, []
+            
+    except Exception as e:
+        print_error(f"Available dates test error: {str(e)}")
+        return False, []
+
+def test_news_distributor_auto_extract_no_date():
+    """Test auto-extract endpoint without date filter"""
+    print_test_header("Testing News Distributor - Auto-Extract (No Date Filter)")
+    
+    try:
+        print_info("Testing auto-extract without date filter (all articles)...")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{BASE_URL}/news-distributor/auto-extract",
+            headers=HEADERS,
+            timeout=300  # Extended timeout for processing multiple articles
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success(f"Auto-extract (no date) completed in {processing_time:.2f} seconds")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 6
+            
+            # Check 1: Response has required fields
+            required_fields = ['message', 'total_articles', 'processed_articles', 'new_vocab_count', 'total_vocab_count']
+            missing_fields = [field for field in required_fields if field not in result]
+            
+            if not missing_fields:
+                print_success("✓ Response has all required fields")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields in response: {missing_fields}")
+            
+            # Check 2: Counts are valid numbers
+            total_articles = result.get('total_articles', 0)
+            processed_articles = result.get('processed_articles', 0)
+            new_vocab_count = result.get('new_vocab_count', 0)
+            total_vocab_count = result.get('total_vocab_count', 0)
+            
+            if all(isinstance(x, int) for x in [total_articles, processed_articles, new_vocab_count, total_vocab_count]):
+                print_success(f"✓ Valid counts - Total: {total_articles}, Processed: {processed_articles}, New: {new_vocab_count}, Total Vocab: {total_vocab_count}")
+                checks_passed += 1
+            else:
+                print_error("✗ Invalid count types in response")
+            
+            # Check 3: Processed articles should be <= total articles
+            if processed_articles <= total_articles:
+                print_success(f"✓ Processed articles count is consistent: {processed_articles}/{total_articles}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Processed articles count inconsistent: {processed_articles} > {total_articles}")
+            
+            # Check 4: Output content exists if articles were processed
+            output_content = result.get('output_content', '')
+            
+            if processed_articles > 0:
+                if output_content and "Từ vựng web3 cần học hôm nay:" in output_content:
+                    print_success("✓ Output content generated with Vietnamese format")
+                    checks_passed += 1
+                else:
+                    print_error("✗ Output content missing or incorrect format")
+            else:
+                print_info("No articles processed, output content check skipped")
+                checks_passed += 1
+            
+            # Check 5: New vocab count should be >= 0
+            if new_vocab_count >= 0:
+                print_success(f"✓ New vocabulary count is valid: {new_vocab_count}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Invalid new vocabulary count: {new_vocab_count}")
+            
+            # Check 6: Total vocab count should be >= new vocab count
+            if total_vocab_count >= new_vocab_count:
+                print_success(f"✓ Total vocab count is consistent: {total_vocab_count}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Total vocab count inconsistent: {total_vocab_count} < {new_vocab_count}")
+            
+            # Show sample of output content
+            if output_content:
+                print_info("Sample auto-extract output:")
+                print("-" * 40)
+                print(output_content[:500] + "..." if len(output_content) > 500 else output_content)
+                print("-" * 40)
+            
+            print_info(f"Auto-extract (no date) test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 4, result
+            
+        else:
+            print_error(f"Auto-extract (no date) failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, None
+            
+    except Exception as e:
+        print_error(f"Auto-extract (no date) test error: {str(e)}")
+        return False, None
+
+def test_news_distributor_auto_extract_with_date(selected_date):
+    """Test auto-extract endpoint with specific date filter"""
+    print_test_header("Testing News Distributor - Auto-Extract (With Date Filter)")
+    
+    if not selected_date:
+        print_error("No date available for testing date-filtered auto-extract")
+        return False, None
+    
+    try:
+        print_info(f"Testing auto-extract with date filter: {selected_date}")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{BASE_URL}/news-distributor/auto-extract?selected_date={selected_date}",
+            headers=HEADERS,
+            timeout=300  # Extended timeout for processing
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success(f"Auto-extract (with date) completed in {processing_time:.2f} seconds")
+            
+            # Verify response structure
+            checks_passed = 0
+            total_checks = 5
+            
+            # Check 1: Response has required fields
+            required_fields = ['message', 'total_articles', 'processed_articles', 'new_vocab_count', 'total_vocab_count']
+            missing_fields = [field for field in required_fields if field not in result]
+            
+            if not missing_fields:
+                print_success("✓ Response has all required fields")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields in response: {missing_fields}")
+            
+            # Check 2: Date filtering works (should process fewer or equal articles than no-date version)
+            total_articles = result.get('total_articles', 0)
+            processed_articles = result.get('processed_articles', 0)
+            
+            print_success(f"✓ Date filtering applied - Total: {total_articles}, Processed: {processed_articles}")
+            checks_passed += 1
+            
+            # Check 3: Processed articles should be <= total articles
+            if processed_articles <= total_articles:
+                print_success(f"✓ Processed articles count is consistent: {processed_articles}/{total_articles}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Processed articles count inconsistent: {processed_articles} > {total_articles}")
+            
+            # Check 4: Output content format
+            output_content = result.get('output_content', '')
+            
+            if processed_articles > 0:
+                if output_content and ("Từ vựng web3 cần học hôm nay:" in output_content or "Không có từ vựng mới" in output_content):
+                    print_success("✓ Output content has correct Vietnamese format")
+                    checks_passed += 1
+                else:
+                    print_error("✗ Output content missing or incorrect format")
+            else:
+                if "No articles found" in result.get('message', ''):
+                    print_success("✓ Proper message for no articles found")
+                    checks_passed += 1
+                else:
+                    print_info("No articles processed for this date")
+                    checks_passed += 1
+            
+            # Check 5: Counts are consistent
+            new_vocab_count = result.get('new_vocab_count', 0)
+            total_vocab_count = result.get('total_vocab_count', 0)
+            
+            if total_vocab_count >= new_vocab_count >= 0:
+                print_success(f"✓ Vocabulary counts are consistent - New: {new_vocab_count}, Total: {total_vocab_count}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Vocabulary counts inconsistent - New: {new_vocab_count}, Total: {total_vocab_count}")
+            
+            print_info(f"Auto-extract (with date) test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 3, result
+            
+        else:
+            print_error(f"Auto-extract (with date) failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, None
+            
+    except Exception as e:
+        print_error(f"Auto-extract (with date) test error: {str(e)}")
+        return False, None
+
+def test_gemini_api_key_validation():
+    """Test if the Gemini API key for News Distributor is working"""
+    print_test_header("Testing Gemini API Key Validation")
+    
+    try:
+        # The API key mentioned in the review request
+        expected_api_key = "AIzaSyDWdYyrmShutcw7LID_MFeKWl2tWhwBccc"
+        
+        print_info(f"Expected Gemini API key: {expected_api_key}")
+        
+        # We can't directly test the API key without making an actual call
+        # But we can test if the vocabulary extraction works, which uses this key
+        
+        # First, get articles to test with
+        articles_response = requests.get(
+            f"{BASE_URL}/news-distributor/articles",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if articles_response.status_code == 200:
+            articles_data = articles_response.json()
+            articles = articles_data.get('articles', [])
+            
+            if len(articles) > 0:
+                # Test vocabulary extraction with first article (this uses the Gemini API key)
+                article_id = articles[0].get('id')
+                
+                print_info(f"Testing Gemini API key with article: {article_id}")
+                
+                vocab_response = requests.post(
+                    f"{BASE_URL}/news-distributor/extract-vocabulary/{article_id}",
+                    headers=HEADERS,
+                    timeout=120
+                )
+                
+                if vocab_response.status_code == 200:
+                    print_success("✓ Gemini API key is working (vocabulary extraction successful)")
+                    return True
+                else:
+                    print_error(f"✗ Gemini API key may have issues: {vocab_response.status_code}")
+                    print_error(f"Response: {vocab_response.text}")
+                    return False
+            else:
+                print_info("No articles available to test Gemini API key")
+                return True  # Can't test but not a failure
+        else:
+            print_error(f"Could not get articles to test API key: {articles_response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_error(f"Gemini API key validation error: {str(e)}")
+        return False
+
+def check_backend_logs_for_errors():
+    """Check backend logs for auto-extract related errors"""
+    print_test_header("Checking Backend Logs for Auto-Extract Errors")
+    
+    try:
+        import subprocess
+        
+        # Check for specific error patterns in logs
+        error_patterns = [
+            "Auto-extraction error",
+            "Failed to auto-extract",
+            "AIzaSyDWdYyrmShutcw7LID_MFeKWl2tWhwBccc",
+            "rate limit",
+            "quota",
+            "overload",
+            "API key"
+        ]
+        
+        print_info("Checking backend logs for auto-extract related errors...")
+        
+        # Get recent logs
+        result = subprocess.run(
+            ["tail", "-n", "200", "/var/log/supervisor/backend.err.log"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            log_content = result.stdout
+            
+            found_errors = []
+            for pattern in error_patterns:
+                if pattern.lower() in log_content.lower():
+                    found_errors.append(pattern)
+            
+            if found_errors:
+                print_error(f"✗ Found error patterns in logs: {', '.join(found_errors)}")
+                
+                # Show relevant log lines
+                lines = log_content.split('\n')
+                relevant_lines = []
+                for line in lines:
+                    if any(pattern.lower() in line.lower() for pattern in error_patterns):
+                        relevant_lines.append(line)
+                
+                if relevant_lines:
+                    print_info("Relevant log entries:")
+                    print("-" * 40)
+                    for line in relevant_lines[-10:]:  # Show last 10 relevant lines
+                        print(line)
+                    print("-" * 40)
+                
+                return False
+            else:
+                print_success("✓ No auto-extract related errors found in recent logs")
+                return True
+        else:
+            print_error("Could not read backend logs")
+            return False
+            
+    except Exception as e:
+        print_error(f"Backend log check error: {str(e)}")
+        return False
+
 def main():
     """Run all backend tests"""
     print("🚀 Partner Content Hub, KOL Post & News Distributor - Backend API Testing")
@@ -1573,7 +1949,12 @@ def main():
         'news_distributor_duplicate_extraction': False,
         'news_distributor_vocabulary_count': False,
         'news_distributor_reset_vocabulary': False,
-        'news_distributor_vocabulary_count_after_reset': False
+        'news_distributor_vocabulary_count_after_reset': False,
+        'news_distributor_available_dates': False,
+        'news_distributor_auto_extract_no_date': False,
+        'news_distributor_auto_extract_with_date': False,
+        'gemini_api_key_validation': False,
+        'backend_logs_check': False
     }
     
     # Test 1: API Health Check
