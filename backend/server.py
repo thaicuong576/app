@@ -1660,7 +1660,7 @@ async def refresh_rss_feed():
             article_link = entry.get("link", "")
             if article_link and (not content_value or len(content_value) < 200):
                 logging.info(f"🔍 Attempting to scrape full content from: {article_link}")
-                scraped_content = await scrape_full_article_content(article_link)
+                scraped_content = scrape_full_article_content(article_link)
                 if scraped_content:
                     content_value = scraped_content
                     logging.info(f"✅ Successfully scraped {len(scraped_content)} characters")
