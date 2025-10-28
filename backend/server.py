@@ -2144,7 +2144,7 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu 
             "message": "Vocabulary extraction completed successfully",
             "selected_date": selected_date,
             "total_articles": len(articles),
-            "total_vocab_extracted": len(vocab_list),
+            "total_vocab_extracted": vocab_count,
             "new_vocab_count": new_vocab_count,
             "total_vocab_count": total_vocab_count,
             "output_content": output_content
