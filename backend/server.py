@@ -1947,38 +1947,46 @@ async def get_available_dates():
 
 @api_router.post("/news-distributor/auto-extract")
 async def auto_extract_vocabulary(selected_date: str = None):
-    """Automatically extract vocabulary from all articles (optionally filtered by date)"""
+    """Extract vocabulary from ALL articles in a date group (combines all titles + descriptions)"""
     try:
         from datetime import datetime
         
-        # Build query
-        query = {}
-        if selected_date:
-            # Filter articles by date
-            logging.info(f"📅 Filtering articles by date: {selected_date}")
-            # Match articles where published_date starts with selected_date
-            query["published_date"] = {"$regex": f"^{selected_date}"}
+        if not selected_date:
+            raise HTTPException(status_code=400, detail="selected_date is required")
         
-        # Get articles
+        # Filter articles by date
+        logging.info(f"📅 Extracting vocabulary for date group: {selected_date}")
+        query = {"published_date": {"$regex": f"^{selected_date}"}}
+        
+        # Get ALL articles from selected date
         articles = await db.rss_news_articles.find(query, {"_id": 0}).to_list(length=None)
         
         if not articles:
             return {
                 "message": "No articles found for the selected date",
                 "total_articles": 0,
-                "processed_articles": 0,
                 "new_vocab_count": 0,
-                "total_vocab_count": 0
+                "total_vocab_count": 0,
+                "output_content": "Không có bài viết nào trong ngày này."
             }
         
-        logging.info(f"🔄 Auto-extracting vocabulary from {len(articles)} articles...")
+        logging.info(f"📰 Found {len(articles)} articles in date group {selected_date}")
         
-        # Get existing vocabulary
+        # COMBINE ALL titles and descriptions from this date group into ONE text
+        combined_content = ""
+        for i, article in enumerate(articles, 1):
+            title = article.get("title", "")
+            description = article.get("description", "") or article.get("content", "")
+            
+            combined_content += f"\n\n--- News {i} ---\n"
+            combined_content += f"Title: {title}\n"
+            combined_content += f"Overview: {description}\n"
+        
+        logging.info(f"📦 Combined content length: {len(combined_content)} characters")
+        
+        # Get existing vocabulary for duplicate filtering (case-insensitive)
         existing_vocab = await db.vocabulary.find().to_list(length=None)
         existing_words_lowercase = {v["word"].lower() for v in existing_vocab}
-        
-        processed_articles = 0
-        total_new_vocab = 0
         
         # Use the news distributor API key
         NEWS_DISTRIBUTOR_API_KEY = "AIzaSyDWdYyrmShutcw7LID_MFeKWl2tWhwBccc"
@@ -1987,7 +1995,7 @@ async def auto_extract_vocabulary(selected_date: str = None):
         system_prompt = """Bạn là chuyên gia phân tích từ vựng chuyên ngành crypto, blockchain, finance và kinh tế.
 
 NHIỆM VỤ:
-Phân tích nội dung tiếng Anh và trích xuất các từ vựng đáp ứng CẢ HAI tiêu chí sau:
+Phân tích TẤT CẢ các tin tức trong nhóm ngày và trích xuất các từ vựng đáp ứng CẢ HAI tiêu chí sau:
 
 TIÊU CHÍ 1 (ít nhất 1 trong các lĩnh vực):
 - Crypto-related (Bitcoin, DeFi, NFT, Web3, etc.)
@@ -2008,111 +2016,94 @@ Từ vựng web3 cần học hôm nay:
 Vocab_1 - Nghĩa tiếng Việt (1-6 từ)
 Vocab_2 - Nghĩa tiếng Việt (1-6 từ)
 Vocab_3 - Nghĩa tiếng Việt (1-6 từ)
+...
 
 CHÚ Ý:
 - Mỗi từ vựng MỘT DÒNG, format: "Word - Definition"
 - Không thêm số thứ tự, bullet points, hoặc ký tự đặc biệt
-- Không thêm bất kỳ text nào khác ngoài template trên"""
+- Không thêm bất kỳ text nào khác ngoài template trên
+- Trích xuất từ TẤT CẢ các tin tức trong nhóm"""
         
-        # Collect ALL vocab from ALL articles into ONE list
-        all_vocab_list = []
+        # Prepare prompt with COMBINED content from ALL articles
+        user_prompt = f"""Dưới đây là TẤT CẢ {len(articles)} tin tức crypto từ ngày {selected_date}:
+
+{combined_content}
+
+Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu từ TOÀN BỘ các tin tức trên."""
         
-        # Process each article
-        for article in articles:
-            try:
-                article_id = article.get("id", "")
-                title = article.get("title", "")
-                content = article.get("content", "") or article.get("description", "")
-                
-                if not content or len(content.strip()) < 10:
-                    logging.info(f"⏭️ Skipping article (no content): {title[:50]}...")
-                    continue
-                
-                logging.info(f"📰 Processing: {title[:50]}...")
-                
-                # Prepare prompt
-                user_prompt = f"""Title: {title}
-
-Content:
-{content}
-
-Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu."""
-                
-                # Call Gemini API
-                llm_chat = LlmChat(
-                    api_key=NEWS_DISTRIBUTOR_API_KEY,
-                    session_id=f"auto_vocab_{article_id}",
-                    system_message=system_prompt
-                ).with_model("gemini", "gemini-2.0-flash-exp")
-                
-                user_message = UserMessage(text=user_prompt)
-                response = await llm_chat.send_message(user_message)
-                generated_content = response.strip()
-                
-                # Parse vocabulary and add to master list
-                article_vocab_count = 0
-                lines = generated_content.split("\n")
-                
-                for line in lines:
-                    line = line.strip()
-                    if not line or "Từ vựng web3" in line or "cần học hôm nay" in line:
-                        continue
-                    
-                    if " - " in line:
-                        parts = line.split(" - ", 1)
-                        if len(parts) == 2:
-                            word = parts[0].strip()
-                            definition = parts[1].strip()
-                            
-                            # Add to master vocab list (ALL articles combined)
-                            all_vocab_list.append(f"{word} - {definition}")
-                            article_vocab_count += 1
-                            
-                            # Save to database if not exists
-                            if word.lower() not in existing_words_lowercase:
-                                vocab_item = VocabularyItem(
-                                    word=word.lower(),
-                                    original_word=word,
-                                    vietnamese_definition=definition,
-                                    source_article_id=article_id,
-                                    source_article_title=title
-                                )
-                                await db.vocabulary.insert_one(vocab_item.dict())
-                                
-                                existing_words_lowercase.add(word.lower())
-                                total_new_vocab += 1
-                
-                processed_articles += 1
-                logging.info(f"✅ Extracted {article_vocab_count} vocab from: {title[:50]}...")
-                
-            except Exception as e:
-                logging.error(f"Error processing article {title[:50]}: {e}")
+        logging.info(f"🤖 Calling Gemini API to extract vocabulary from date group...")
+        
+        # Call Gemini API ONCE with combined content
+        llm_chat = LlmChat(
+            api_key=NEWS_DISTRIBUTOR_API_KEY,
+            session_id=f"date_group_{selected_date}",
+            system_message=system_prompt
+        ).with_model("gemini", "gemini-2.0-flash-exp")
+        
+        user_message = UserMessage(text=user_prompt)
+        response = await llm_chat.send_message(user_message)
+        generated_content = response.strip()
+        
+        logging.info(f"✅ Received response from Gemini API")
+        
+        # Parse vocabulary from response
+        vocab_list = []
+        new_vocab_count = 0
+        lines = generated_content.split("\n")
+        
+        for line in lines:
+            line = line.strip()
+            if not line or "Từ vựng web3" in line or "cần học hôm nay" in line:
                 continue
+            
+            if " - " in line:
+                parts = line.split(" - ", 1)
+                if len(parts) == 2:
+                    word = parts[0].strip()
+                    definition = parts[1].strip()
+                    
+                    # Add to output list
+                    vocab_list.append(f"{word} - {definition}")
+                    
+                    # Save to database if not exists (case-insensitive)
+                    if word.lower() not in existing_words_lowercase:
+                        vocab_item = VocabularyItem(
+                            word=word.lower(),
+                            original_word=word,
+                            vietnamese_definition=definition,
+                            source_article_id=selected_date,  # Use date as source
+                            source_article_title=f"Date group: {selected_date}"
+                        )
+                        await db.vocabulary.insert_one(vocab_item.dict())
+                        
+                        existing_words_lowercase.add(word.lower())
+                        new_vocab_count += 1
         
         total_vocab_count = await db.vocabulary.count_documents({})
         
-        # Create ONE content template with ALL vocab
-        output_content = ""
-        if all_vocab_list:
-            output_content = "Từ vựng web3 cần học hôm nay:\n" + "\n".join(all_vocab_list)
+        # Build output content in template format
+        if vocab_list:
+            output_content = "Từ vựng web3 cần học hôm nay:\n\n" + "\n".join(vocab_list)
         else:
             output_content = "Không có từ vựng mới nào được thu thập."
         
-        logging.info(f"🎉 Auto-extraction complete: {processed_articles} articles, {len(all_vocab_list)} total vocab, {total_new_vocab} new vocab")
+        logging.info(f"🎉 Extraction complete for date {selected_date}: {len(vocab_list)} vocab extracted, {new_vocab_count} new, {total_vocab_count} total in store")
         
         return {
-            "message": "Auto-extraction completed successfully",
+            "message": "Vocabulary extraction completed successfully",
+            "selected_date": selected_date,
             "total_articles": len(articles),
-            "processed_articles": processed_articles,
-            "total_vocab_extracted": len(all_vocab_list),
-            "new_vocab_count": total_new_vocab,
+            "total_vocab_extracted": len(vocab_list),
+            "new_vocab_count": new_vocab_count,
             "total_vocab_count": total_vocab_count,
             "output_content": output_content
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Auto-extraction error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to auto-extract vocabulary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to extract vocabulary: {str(e)}")
 
 # Include router
 app.include_router(api_router)
