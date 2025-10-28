@@ -1190,6 +1190,105 @@ frontend:
           APP.JS UPDATE:
           - Import NewsDistributor component
           - Add route: "/news-distributor" → <NewsDistributor />
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ENHANCED NEWS DISTRIBUTOR FRONTEND - 3 Major UI Improvements:
+          
+          🎯 FEATURE 1: DYNAMIC DATE SELECTOR
+          - New section: "Chọn ngày để trích xuất từ vựng"
+          - Calendar icon with red gradient
+          - Dynamic dropdown populated from API
+          - Shows dates in Vietnamese format: "Thứ Hai, 1 tháng 1, 2025"
+          - Fetches available dates on component mount
+          - State: selectedDate, availableDates
+          - API call: GET /api/news-distributor/available-dates
+          
+          🎯 FEATURE 2: AUTOMATED BATCH EXTRACTION
+          - New button: "Tự động trích xuất tất cả bài viết trong ngày"
+          - Green gradient (from-green-500 to-emerald-600)
+          - Play icon to indicate automation
+          - Disabled when no date selected
+          - Loading state: isAutoExtracting with spinner
+          - Toast notifications:
+            • Start: "Đang tự động trích xuất..."
+            • Complete: Shows statistics (processed, new vocab, total)
+          - Output shows summary with statistics
+          - API call: POST /api/news-distributor/auto-extract?selected_date=...
+          
+          🎯 FEATURE 3: VIEW ALL VOCABULARY MODAL
+          - New button: "Xem tất cả từ vựng" (blue, Eye icon)
+          - Full-screen modal with vocabulary list
+          - Modal features:
+            * Header: Title with count "Kho từ vựng Web3 (X từ)"
+            * Search bar: Filter vocabulary by word or definition
+            * Vocabulary cards showing:
+              - Original word (bold, large)
+              - Vietnamese definition
+              - Source article title (with 📰 emoji)
+              - Timestamp when added
+            * Hover effects on cards (border color change)
+            * Close button (X icon)
+            * Footer: "Đóng" button
+          - State: showVocabModal, allVocabulary, vocabSearchTerm
+          - API call: GET /api/news-distributor/vocabulary
+          - Fetches data on modal open
+          - Search filtering in real-time (case-insensitive)
+          
+          🔧 UI/UX ENHANCEMENTS:
+          - Reorganized layout: Date selector → Auto extract → Manual selection
+          - Manual article section now labeled: "Hoặc chọn bài viết thủ công"
+          - Extract button text updated: "Trích xuất từ vựng từ bài này"
+          - Vocabulary management section:
+            * Two buttons side by side: "Xem tất cả" + "Reset"
+            * "Xem tất cả" button in blue
+            * "Reset" button in red
+          - Icons added: Calendar, Play, Eye, X
+          - Enhanced visual hierarchy
+          - Better separation between auto and manual modes
+          
+          📱 RESPONSIVE DESIGN:
+          - Modal: max-w-4xl, responsive padding
+          - Vocabulary cards: Flexible layout
+          - Search bar: Full width in modal
+          - Scrollable content area with max-height
+          
+          📊 STATE MANAGEMENT:
+          NEW STATES:
+          - selectedDate: Selected date for batch processing
+          - availableDates: Array of available dates from API
+          - isAutoExtracting: Loading state for auto extraction
+          - showVocabModal: Modal visibility toggle
+          - allVocabulary: Full vocabulary list
+          - vocabSearchTerm: Search filter for vocabulary
+          
+          NEW FUNCTIONS:
+          - fetchAvailableDates(): Fetch available dates on mount
+          - fetchAllVocabulary(): Fetch all vocabulary for modal
+          - handleAutoExtract(): Trigger automated batch extraction
+          - handleViewAllVocabulary(): Open vocabulary modal
+          
+          🎨 VISUAL IMPROVEMENTS:
+          - Green gradient for auto-extract (indicates automated action)
+          - Blue button for "View All" (information/viewing action)
+          - Red button for "Reset" (destructive action)
+          - Calendar icon for date selection
+          - Play icon for automation
+          - Eye icon for viewing
+          - Consistent spacing and padding
+          
+          ⚠️ TESTING NEEDED:
+          1. Test date selector populates correctly
+          2. Test auto-extract with selected date
+          3. Test auto-extract progress and statistics
+          4. Test "View All Vocabulary" modal opens
+          5. Test search in vocabulary modal
+          6. Test vocabulary cards display correctly
+          7. Test modal close functionality
+          8. Test responsive design on mobile/tablet
+          9. Test toast notifications for all actions
+          10. Verify all API integrations working
+
 
 metadata:
   created_by: "main_agent"
