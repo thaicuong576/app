@@ -40,7 +40,7 @@ const Home = () => {
     {
       id: 'news-distributor',
       title: 'News Distributor',
-      description: 'Thu thập từ vựng Web3 từ tin tức CoinDesk',
+      description: 'Thu thập từ vựng Web3 từ tin tức CoinTelegraph',
       icon: Rss,
       path: '/news-distributor',
       gradient: 'from-red-500 to-orange-600'
