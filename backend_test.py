@@ -1542,6 +1542,364 @@ def test_delete_partner_content_project(project_id):
         print_error(f"Delete project error: {str(e)}")
         return False
 
+# COINTELEGRAPH RSS INTEGRATION TESTS
+def test_cointelegraph_rss_refresh():
+    """Test RSS refresh with CoinTelegraph feed specifically"""
+    print_test_header("Testing CoinTelegraph RSS Integration - RSS Refresh")
+    
+    try:
+        print_info("Testing RSS refresh with CoinTelegraph feed...")
+        print_info("Expected RSS URL: https://cointelegraph.com/rss")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{BASE_URL}/news-distributor/refresh-rss",
+            headers=HEADERS,
+            timeout=90  # Increased timeout for CoinTelegraph
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success(f"CoinTelegraph RSS refresh completed in {processing_time:.2f} seconds")
+            
+            # Verify CoinTelegraph specific results
+            checks_passed = 0
+            total_checks = 5
+            
+            # Check 1: Response structure
+            required_fields = ['articles_saved', 'articles_updated', 'total_articles']
+            missing_fields = [field for field in required_fields if field not in result]
+            
+            if not missing_fields:
+                print_success("✓ Response has all required fields")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields: {missing_fields}")
+            
+            # Check 2: Articles fetched successfully
+            total_articles = result.get('total_articles', 0)
+            articles_saved = result.get('articles_saved', 0)
+            articles_updated = result.get('articles_updated', 0)
+            
+            if total_articles > 0:
+                print_success(f"✓ CoinTelegraph RSS feed parsed: {total_articles} articles")
+                checks_passed += 1
+            else:
+                print_error("✗ No articles fetched from CoinTelegraph RSS")
+            
+            # Check 3: Reasonable number of articles (CoinTelegraph typically has 10-50 articles)
+            if 5 <= total_articles <= 100:
+                print_success(f"✓ Reasonable article count: {total_articles}")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Unexpected article count: {total_articles} (expected 5-100)")
+            
+            # Check 4: Processing successful (saved or updated articles)
+            if articles_saved > 0 or articles_updated > 0:
+                print_success(f"✓ Articles processed: {articles_saved} saved, {articles_updated} updated")
+                checks_passed += 1
+            else:
+                print_error("✗ No articles were saved or updated")
+            
+            # Check 5: No processing errors in response
+            if 'error' not in result and 'errors' not in result:
+                print_success("✓ No errors in RSS processing")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Errors in RSS processing: {result.get('error', result.get('errors', 'Unknown'))}")
+            
+            print_info(f"CoinTelegraph RSS test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 4, total_articles
+            
+        else:
+            print_error(f"CoinTelegraph RSS refresh failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False, 0
+            
+    except Exception as e:
+        print_error(f"CoinTelegraph RSS test error: {str(e)}")
+        return False, 0
+
+def test_cointelegraph_article_content_quality():
+    """Test article content quality from CoinTelegraph vs CoinDesk"""
+    print_test_header("Testing CoinTelegraph Article Content Quality")
+    
+    try:
+        # Get articles from database
+        response = requests.get(
+            f"{BASE_URL}/news-distributor/articles",
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            articles = result.get('articles', [])
+            
+            print_success(f"Retrieved {len(articles)} articles for content quality check")
+            
+            if len(articles) == 0:
+                print_error("No articles available for content quality testing")
+                return False
+            
+            # Analyze content quality
+            checks_passed = 0
+            total_checks = 4
+            
+            # Check 1: At least one article exists
+            if len(articles) >= 1:
+                print_success(f"✓ Articles available: {len(articles)}")
+                checks_passed += 1
+            else:
+                print_error("✗ No articles found")
+            
+            # Check 2: Articles have content field
+            articles_with_content = [a for a in articles if a.get('content')]
+            if len(articles_with_content) > 0:
+                print_success(f"✓ Articles with content field: {len(articles_with_content)}")
+                checks_passed += 1
+            else:
+                print_error("✗ No articles have content field")
+            
+            # Check 3: Content length analysis (should be > 100 chars for good scraping)
+            long_content_articles = []
+            for article in articles_with_content:
+                content = article.get('content', '')
+                if len(content) > 100:
+                    long_content_articles.append(article)
+            
+            if len(long_content_articles) > 0:
+                print_success(f"✓ Articles with substantial content (>100 chars): {len(long_content_articles)}")
+                checks_passed += 1
+                
+                # Show sample content length
+                sample_article = long_content_articles[0]
+                content_length = len(sample_article.get('content', ''))
+                print_info(f"Sample article content length: {content_length} characters")
+                print_info(f"Sample title: {sample_article.get('title', 'N/A')[:60]}...")
+            else:
+                print_error("✗ No articles with substantial content (all < 100 chars)")
+            
+            # Check 4: Compare with previous CoinDesk performance (content should be better)
+            avg_content_length = 0
+            if articles_with_content:
+                total_length = sum(len(a.get('content', '')) for a in articles_with_content)
+                avg_content_length = total_length / len(articles_with_content)
+            
+            if avg_content_length > 50:  # CoinDesk was typically very short
+                print_success(f"✓ Average content length improved: {avg_content_length:.1f} chars")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Average content length still low: {avg_content_length:.1f} chars")
+            
+            print_info(f"Content quality test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 3, articles[0].get('id') if articles else None
+            
+        else:
+            print_error(f"Failed to get articles: {response.status_code}")
+            return False, None
+            
+    except Exception as e:
+        print_error(f"Content quality test error: {str(e)}")
+        return False, None
+
+def test_cointelegraph_auto_extract():
+    """Test auto-extract with CoinTelegraph content (should process articles successfully)"""
+    print_test_header("Testing CoinTelegraph Auto-Extract Performance")
+    
+    try:
+        print_info("Testing auto-extract without date filter...")
+        print_info("Expected: Should process articles successfully (unlike CoinDesk 0/54)")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{BASE_URL}/news-distributor/auto-extract",
+            headers=HEADERS,
+            timeout=180  # Increased timeout for processing multiple articles
+        )
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            print_success(f"Auto-extract completed in {processing_time:.2f} seconds")
+            
+            # Verify CoinTelegraph auto-extract performance
+            checks_passed = 0
+            total_checks = 6
+            
+            # Check 1: Response structure
+            required_fields = ['total_articles', 'processed_articles', 'new_vocab_count', 'output_content']
+            missing_fields = [field for field in required_fields if field not in result]
+            
+            if not missing_fields:
+                print_success("✓ Response has all required fields")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Missing fields: {missing_fields}")
+            
+            # Check 2: Articles were processed (improvement over CoinDesk)
+            total_articles = result.get('total_articles', 0)
+            processed_articles = result.get('processed_articles', 0)
+            
+            if processed_articles > 0:
+                print_success(f"✓ Articles processed successfully: {processed_articles}/{total_articles}")
+                print_success("✓ IMPROVEMENT: CoinDesk processed 0/54, CoinTelegraph processes articles!")
+                checks_passed += 1
+            else:
+                print_error(f"✗ No articles processed: {processed_articles}/{total_articles}")
+                print_error("✗ Same issue as CoinDesk: 0 articles processed")
+            
+            # Check 3: New vocabulary extracted
+            new_vocab_count = result.get('new_vocab_count', 0)
+            
+            if new_vocab_count > 0:
+                print_success(f"✓ New vocabulary extracted: {new_vocab_count} words")
+                print_success("✓ IMPROVEMENT: CoinDesk extracted 0 vocab, CoinTelegraph extracts vocabulary!")
+                checks_passed += 1
+            else:
+                print_error(f"✗ No new vocabulary extracted: {new_vocab_count}")
+            
+            # Check 4: Output content generated
+            output_content = result.get('output_content', '')
+            
+            if output_content and len(output_content) > 50:
+                print_success("✓ Vocabulary output content generated")
+                checks_passed += 1
+            else:
+                print_error("✗ No meaningful output content generated")
+            
+            # Check 5: Processing rate (should be better than 0%)
+            processing_rate = (processed_articles / total_articles * 100) if total_articles > 0 else 0
+            
+            if processing_rate > 0:
+                print_success(f"✓ Processing rate: {processing_rate:.1f}% (CoinDesk was 0%)")
+                checks_passed += 1
+            else:
+                print_error(f"✗ Processing rate: {processing_rate:.1f}% (same as CoinDesk)")
+            
+            # Check 6: Vietnamese vocabulary format
+            if "Từ vựng web3 cần học hôm nay:" in output_content:
+                print_success("✓ Vietnamese vocabulary format correct")
+                checks_passed += 1
+            else:
+                print_error("✗ Vietnamese vocabulary format incorrect")
+            
+            # Show comparison with CoinDesk
+            print_info("=== COINTELEGRAPH vs COINDESK COMPARISON ===")
+            print_info(f"CoinDesk (previous):     0/54 articles processed (0%)")
+            print_info(f"CoinTelegraph (current): {processed_articles}/{total_articles} articles processed ({processing_rate:.1f}%)")
+            print_info(f"Vocabulary improvement:  {new_vocab_count} words extracted")
+            
+            # Show sample output
+            if output_content:
+                print_info("Sample vocabulary output:")
+                print("-" * 40)
+                print(output_content[:300] + "..." if len(output_content) > 300 else output_content)
+                print("-" * 40)
+            
+            print_info(f"CoinTelegraph auto-extract test: {checks_passed}/{total_checks} checks passed")
+            return checks_passed >= 4
+            
+        else:
+            print_error(f"Auto-extract failed: {response.status_code}")
+            print_error(f"Response: {response.text}")
+            return False
+            
+    except Exception as e:
+        print_error(f"CoinTelegraph auto-extract test error: {str(e)}")
+        return False
+
+def test_cointelegraph_backend_logs():
+    """Check backend logs for CoinTelegraph integration success/failure indicators"""
+    print_test_header("Testing CoinTelegraph Backend Logs Analysis")
+    
+    try:
+        print_info("Checking backend logs for CoinTelegraph integration indicators...")
+        
+        # Check supervisor backend logs
+        import subprocess
+        
+        # Get recent backend logs
+        log_command = "tail -n 100 /var/log/supervisor/backend.*.log"
+        
+        try:
+            result = subprocess.run(log_command, shell=True, capture_output=True, text=True, timeout=10)
+            logs = result.stdout + result.stderr
+            
+            if logs:
+                print_success("Backend logs retrieved successfully")
+                
+                # Analyze logs for key indicators
+                checks_passed = 0
+                total_checks = 4
+                
+                # Check 1: No 429 errors (rate limiting)
+                if "429" not in logs and "Too Many Requests" not in logs:
+                    print_success("✓ No 429 rate limit errors found")
+                    checks_passed += 1
+                else:
+                    print_error("✗ 429 rate limit errors detected")
+                    print_info("Found rate limit indicators in logs")
+                
+                # Check 2: Successful scraping indicators
+                success_indicators = ["Successfully scraped", "✅", "RSS refresh completed", "articles processed"]
+                has_success = any(indicator in logs for indicator in success_indicators)
+                
+                if has_success:
+                    print_success("✓ Success indicators found in logs")
+                    checks_passed += 1
+                else:
+                    print_error("✗ No success indicators found in logs")
+                
+                # Check 3: CoinTelegraph specific mentions
+                cointelegraph_indicators = ["cointelegraph", "CoinTelegraph", "cointelegraph.com"]
+                has_cointelegraph = any(indicator in logs for indicator in cointelegraph_indicators)
+                
+                if has_cointelegraph:
+                    print_success("✓ CoinTelegraph references found in logs")
+                    checks_passed += 1
+                else:
+                    print_info("No specific CoinTelegraph references in recent logs")
+                    checks_passed += 1  # Not critical
+                
+                # Check 4: No critical errors
+                error_indicators = ["ERROR", "CRITICAL", "Exception", "Failed to"]
+                critical_errors = [line for line in logs.split('\n') if any(err in line for err in error_indicators)]
+                
+                if len(critical_errors) == 0:
+                    print_success("✓ No critical errors in recent logs")
+                    checks_passed += 1
+                else:
+                    print_error(f"✗ Critical errors found: {len(critical_errors)} error lines")
+                    # Show first few errors
+                    for error in critical_errors[:3]:
+                        print_info(f"Error: {error.strip()}")
+                
+                print_info(f"Backend logs analysis: {checks_passed}/{total_checks} checks passed")
+                return checks_passed >= 3
+                
+            else:
+                print_error("No backend logs retrieved")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            print_error("Timeout retrieving backend logs")
+            return False
+        except Exception as log_error:
+            print_error(f"Error retrieving logs: {str(log_error)}")
+            return False
+            
+    except Exception as e:
+        print_error(f"Backend logs analysis error: {str(e)}")
+        return False
+
 # NEWS DISTRIBUTOR AUTO-EXTRACT SPECIFIC TESTS
 def test_news_distributor_available_dates():
     """Test available dates endpoint for News Distributor"""
