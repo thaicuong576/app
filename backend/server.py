@@ -1583,6 +1583,47 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
 # NEWS DISTRIBUTOR ENDPOINTS
 # ========================================
 
+async def scrape_full_article_content(url: str) -> str:
+    """Scrape full article content from URL using BeautifulSoup"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Try to find article content with common selectors
+        content_selectors = [
+            'article',
+            '.article-content',
+            '.post-content',
+            '.entry-content',
+            'main article',
+            '[class*="article-body"]',
+            '[class*="post-body"]'
+        ]
+        
+        article_content = None
+        for selector in content_selectors:
+            article_content = soup.select_one(selector)
+            if article_content:
+                break
+        
+        if article_content:
+            # Extract text from paragraphs
+            paragraphs = article_content.find_all('p')
+            content_text = '\n\n'.join([p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True)])
+            
+            if len(content_text) > 100:  # Only return if we got substantial content
+                return content_text
+        
+        return ""  # Return empty if scraping failed
+    except Exception as e:
+        logging.warning(f"Failed to scrape article {url}: {e}")
+        return ""
+
 @api_router.post("/news-distributor/refresh-rss")
 async def refresh_rss_feed():
     """Fetch and parse RSS feed from CoinDesk, save articles to database"""
@@ -1615,10 +1656,19 @@ async def refresh_rss_feed():
             if not content_value:
                 content_value = summary
             
+            # Try to scrape full article content from URL
+            article_link = entry.get("link", "")
+            if article_link and (not content_value or len(content_value) < 200):
+                logging.info(f"🔍 Attempting to scrape full content from: {article_link}")
+                scraped_content = await scrape_full_article_content(article_link)
+                if scraped_content:
+                    content_value = scraped_content
+                    logging.info(f"✅ Successfully scraped {len(scraped_content)} characters")
+            
             article_data = {
                 "title": entry.get("title", ""),
                 "description": summary,
-                "link": entry.get("link", ""),
+                "link": article_link,
                 "content": content_value,
                 "published_date": entry.get("published", ""),
                 "guid": entry.get("id", entry.get("link", ""))
