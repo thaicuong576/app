@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Home, RefreshCw, BookOpen, Trash2, Copy, Loader2, Rss, Calendar, Play, X, Eye } from 'lucide-react';
+import { Home, RefreshCw, BookOpen, Trash2, Copy, Loader2, Rss, Search, Calendar, Play, X, Eye } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
@@ -9,23 +9,41 @@ const NewsDistributor = () => {
   const { toast } = useToast();
   
   // State management
-  const [availableDates, setAvailableDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [articles, setArticles] = useState([]);
+  const [selectedArticleId, setSelectedArticleId] = useState('');
   const [vocabularyOutput, setVocabularyOutput] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isAutoExtracting, setIsAutoExtracting] = useState(false);
   const [totalArticles, setTotalArticles] = useState(0);
   const [totalVocabulary, setTotalVocabulary] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [availableDates, setAvailableDates] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
   const [allVocabulary, setAllVocabulary] = useState([]);
   const [showVocabModal, setShowVocabModal] = useState(false);
   const [vocabSearchTerm, setVocabSearchTerm] = useState('');
 
   // Load initial data
   useEffect(() => {
+    fetchArticles();
     fetchVocabularyCount();
     fetchAvailableDates();
   }, []);
+
+  const fetchArticles = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/news-distributor/articles`);
+      if (!response.ok) throw new Error('Failed to fetch articles');
+      
+      const data = await response.json();
+      setArticles(data.articles || []);
+      setTotalArticles(data.total || 0);
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    }
+  };
 
   const fetchVocabularyCount = async () => {
     try {
@@ -84,10 +102,8 @@ const NewsDistributor = () => {
         description: `${data.articles_saved} bài mới, ${data.articles_updated} bài cập nhật. Tổng: ${data.total_articles} bài.`,
       });
       
-      setTotalArticles(data.total_articles);
-      
-      // Refresh available dates
-      await fetchAvailableDates();
+      // Refresh articles list
+      await fetchArticles();
     } catch (error) {
       toast({
         title: "Lỗi",
@@ -99,11 +115,11 @@ const NewsDistributor = () => {
     }
   };
 
-  const handleExtractByDate = async () => {
-    if (!selectedDate) {
+  const handleExtractVocabulary = async () => {
+    if (!selectedArticleId) {
       toast({
-        title: "Chưa chọn ngày",
-        description: "Vui lòng chọn ngày để trích xuất từ vựng.",
+        title: "Chưa chọn bài viết",
+        description: "Vui lòng chọn một bài viết để trích xuất từ vựng.",
         variant: "destructive",
       });
       return;
@@ -113,12 +129,7 @@ const NewsDistributor = () => {
     setVocabularyOutput('');
     
     try {
-      toast({
-        title: "Bắt đầu xử lý...",
-        description: "Đang trích xuất từ vựng từ tất cả bài viết trong ngày đã chọn.",
-      });
-
-      const response = await fetch(`${BACKEND_URL}/api/news-distributor/auto-extract?selected_date=${selectedDate}`, {
+      const response = await fetch(`${BACKEND_URL}/api/news-distributor/extract-vocabulary/${selectedArticleId}`, {
         method: 'POST'
       });
       
@@ -126,17 +137,15 @@ const NewsDistributor = () => {
       
       const data = await response.json();
       
+      setVocabularyOutput(data.output_content);
+      
       toast({
-        title: "Hoàn thành!",
-        description: `Đã xử lý ${data.total_articles} bài viết. Thu thập ${data.total_vocab_extracted} từ vựng (${data.new_vocab_count} mới).`,
+        title: "Trích xuất thành công!",
+        description: `Đã thu thập ${data.new_vocab_count} từ vựng mới. Tổng: ${data.total_vocab_count} từ.`,
       });
       
       // Update vocabulary count
       setTotalVocabulary(data.total_vocab_count);
-      
-      // Show the content template output
-      setVocabularyOutput(data.output_content || "Không có từ vựng nào được thu thập.");
-      
     } catch (error) {
       toast({
         title: "Lỗi",
@@ -182,6 +191,55 @@ const NewsDistributor = () => {
     }
   };
 
+  const handleAutoExtract = async () => {
+    if (!selectedDate) {
+      toast({
+        title: "Chưa chọn ngày",
+        description: "Vui lòng chọn ngày để tự động trích xuất từ vựng.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAutoExtracting(true);
+    setVocabularyOutput('');
+    
+    try {
+      toast({
+        title: "Bắt đầu xử lý...",
+        description: "Đang tự động trích xuất từ vựng từ tất cả bài viết trong ngày đã chọn.",
+      });
+
+      const response = await fetch(`${BACKEND_URL}/api/news-distributor/auto-extract?selected_date=${selectedDate}`, {
+        method: 'POST'
+      });
+      
+      if (!response.ok) throw new Error('Failed to auto-extract vocabulary');
+      
+      const data = await response.json();
+      
+      toast({
+        title: "Hoàn thành!",
+        description: `Đã xử lý ${data.processed_articles}/${data.total_articles} bài viết. Thu thập ${data.total_vocab_extracted} từ vựng (${data.new_vocab_count} mới).`,
+      });
+      
+      // Update vocabulary count
+      setTotalVocabulary(data.total_vocab_count);
+      
+      // Show the content template output
+      setVocabularyOutput(data.output_content || "Không có từ vựng nào được thu thập.");
+      
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể tự động trích xuất: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAutoExtracting(false);
+    }
+  };
+
   const handleViewAllVocabulary = async () => {
     await fetchAllVocabulary();
     setShowVocabModal(true);
@@ -204,14 +262,12 @@ const NewsDistributor = () => {
     });
   };
 
-  // Filter vocabulary for modal search
-  const filteredVocabulary = allVocabulary.filter(item => {
-    const searchLower = vocabSearchTerm.toLowerCase();
-    return (
-      item.original_word?.toLowerCase().includes(searchLower) ||
-      item.vietnamese_definition?.toLowerCase().includes(searchLower)
-    );
-  });
+  // Filter articles based on search term
+  const filteredArticles = articles.filter(article =>
+    article.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedArticle = articles.find(a => a.id === selectedArticleId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#004154] via-[#005568] to-[#003844]">
@@ -240,7 +296,7 @@ const NewsDistributor = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           
           {/* RSS Control Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -262,31 +318,22 @@ const NewsDistributor = () => {
                 {isRefreshing ? 'Đang làm mới...' : 'Làm mới RSS Feed'}
               </button>
             </div>
-            <p className="text-gray-600 text-sm">
-              Fetch tin tức mới nhất từ CoinTelegraph RSS. Chỉ lấy Title, Overview và Ngày đăng (không scrape URL).
+            <p className="text-gray-600">
+              Đã lưu <span className="font-bold text-red-600">{totalArticles}</span> bài viết từ CoinTelegraph
             </p>
-            {totalArticles > 0 && (
-              <p className="text-gray-600 mt-2">
-                Đã lưu <span className="font-bold text-red-600">{totalArticles}</span> bài viết
-              </p>
-            )}
           </div>
 
-          {/* Date Selection & Extract Section */}
+          {/* Date Selection & Auto Extract Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-red-500" />
-              Trích xuất từ vựng theo ngày
+              Chọn ngày để trích xuất từ vựng
             </h2>
             
-            <p className="text-sm text-gray-600 mb-4">
-              Chọn ngày để trích xuất từ vựng từ TẤT CẢ bài viết trong ngày đó (gom title + overview thành 1 nhóm)
-            </p>
-
             {/* Date Selector */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Chọn ngày phát hành:
+                Chọn ngày phát hành bài viết:
               </label>
               <select
                 value={selectedDate}
@@ -307,11 +354,81 @@ const NewsDistributor = () => {
               </select>
             </div>
 
+            {/* Auto Extract Button */}
+            <button
+              onClick={handleAutoExtract}
+              disabled={!selectedDate || isAutoExtracting}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAutoExtracting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Đang tự động xử lý...
+                </>
+              ) : (
+                <>
+                  <Play className="h-5 w-5" />
+                  Tự động trích xuất tất cả bài viết trong ngày
+                </>
+              )}
+            </button>
+
+            <p className="text-sm text-gray-500 mt-2 text-center">
+              Hệ thống sẽ tự động xử lý tất cả bài viết trong ngày đã chọn
+            </p>
+          </div>
+
+          {/* Manual Article Selection Section */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Hoặc chọn bài viết thủ công</h2>
+            
+            {/* Search Bar */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm bài viết..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Article Dropdown */}
+            <select
+              value={selectedArticleId}
+              onChange={(e) => setSelectedArticleId(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+            >
+              <option value="">-- Chọn bài viết --</option>
+              {filteredArticles.map((article) => (
+                <option key={article.id} value={article.id}>
+                  {article.title} ({article.published_date ? new Date(article.published_date).toLocaleDateString('vi-VN') : 'N/A'})
+                </option>
+              ))}
+            </select>
+
+            {/* Selected Article Preview */}
+            {selectedArticle && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="font-semibold text-gray-900 mb-2">{selectedArticle.title}</h3>
+                <p className="text-sm text-gray-600 line-clamp-3">{selectedArticle.description}</p>
+                <a 
+                  href={selectedArticle.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-red-600 hover:text-red-700 mt-2 inline-block"
+                >
+                  Xem bài gốc →
+                </a>
+              </div>
+            )}
+
             {/* Extract Button */}
             <button
-              onClick={handleExtractByDate}
-              disabled={!selectedDate || isExtracting}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleExtractVocabulary}
+              disabled={!selectedArticleId || isExtracting}
+              className="w-full mt-4 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isExtracting ? (
                 <>
@@ -320,22 +437,18 @@ const NewsDistributor = () => {
                 </>
               ) : (
                 <>
-                  <Play className="h-5 w-5" />
-                  Trích xuất từ vựng nhóm ngày này
+                  <BookOpen className="h-5 w-5" />
+                  Trích xuất từ vựng từ bài này
                 </>
               )}
             </button>
-
-            <p className="text-sm text-gray-500 mt-2 text-center">
-              Hệ thống sẽ gom tất cả title + overview trong ngày → Gửi 1 lần cho Gemini AI
-            </p>
           </div>
 
           {/* Vocabulary Output Section */}
           {vocabularyOutput && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">📝 Kết quả từ vựng</h2>
+                <h2 className="text-xl font-bold text-gray-900">Kết quả</h2>
                 <button
                   onClick={handleCopyOutput}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
@@ -354,10 +467,10 @@ const NewsDistributor = () => {
 
           {/* Vocabulary Management Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">🗂️ Quản lý kho từ vựng</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Quản lý kho từ vựng</h2>
             <div className="flex items-center justify-between mb-4">
               <div className="text-gray-600">
-                Tổng số từ vựng đã lưu: <span className="font-bold text-red-600">{totalVocabulary}</span>
+                Tổng số từ vựng đã thu thập: <span className="font-bold text-red-600">{totalVocabulary}</span>
               </div>
               <div className="flex gap-2">
                 <button
@@ -365,7 +478,7 @@ const NewsDistributor = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Eye className="h-4 w-4" />
-                  Xem tất cả
+                  Xem tất cả từ vựng
                 </button>
                 <button
                   onClick={handleResetVocabulary}
@@ -377,26 +490,24 @@ const NewsDistributor = () => {
                   ) : (
                     <Trash2 className="h-4 w-4" />
                   )}
-                  {isResetting ? 'Đang reset...' : 'Reset'}
+                  {isResetting ? 'Đang reset...' : 'Reset kho từ vựng'}
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-500">
-              Kho từ vựng được lưu trữ đơn giản như file txt. Không có duplicate (case-insensitive).
-            </p>
           </div>
 
         </div>
       </div>
 
-      {/* View All Vocabulary Modal */}
+      {/* Vocabulary Modal */}
       {showVocabModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-900">
-                📚 Kho từ vựng Web3 ({allVocabulary.length} từ)
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-red-500" />
+                Kho từ vựng Web3 ({allVocabulary.length} từ)
               </h2>
               <button
                 onClick={() => setShowVocabModal(false)}
@@ -406,54 +517,70 @@ const NewsDistributor = () => {
               </button>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar in Modal */}
             <div className="p-4 border-b">
-              <input
-                type="text"
-                placeholder="Tìm kiếm từ vựng hoặc định nghĩa..."
-                value={vocabSearchTerm}
-                onChange={(e) => setVocabSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm từ vựng..."
+                  value={vocabSearchTerm}
+                  onChange={(e) => setVocabSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
-            {/* Vocabulary List */}
+            {/* Modal Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {filteredVocabulary.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">Không tìm thấy từ vựng nào</p>
+              {allVocabulary.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>Chưa có từ vựng nào được thu thập.</p>
+                </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredVocabulary.map((item, index) => (
-                    <div
-                      key={index}
-                      className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-lg font-bold text-gray-900">
-                            {item.original_word}
-                          </p>
-                          <p className="text-gray-700 mt-1">
-                            {item.vietnamese_definition}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                            <span>📰 {item.source_article_title}</span>
-                            <span>•</span>
-                            <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                  {allVocabulary
+                    .filter(item => 
+                      vocabSearchTerm === '' || 
+                      item.original_word.toLowerCase().includes(vocabSearchTerm.toLowerCase()) ||
+                      item.vietnamese_definition.toLowerCase().includes(vocabSearchTerm.toLowerCase())
+                    )
+                    .map((item, index) => (
+                      <div 
+                        key={item.id || index}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-red-300 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-lg text-gray-900">{item.original_word}</span>
+                              <span className="text-sm text-gray-500">-</span>
+                              <span className="text-gray-700">{item.vietnamese_definition}</span>
+                            </div>
+                            {item.source_article_title && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                📰 Nguồn: {item.source_article_title}
+                              </p>
+                            )}
+                            {item.created_at && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                Thêm lúc: {new Date(item.created_at).toLocaleString('vi-VN')}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t flex justify-end">
+            <div className="p-4 border-t bg-gray-50">
               <button
                 onClick={() => setShowVocabModal(false)}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Đóng
               </button>
