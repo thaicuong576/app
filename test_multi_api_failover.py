@@ -12,7 +12,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://news-sync-debug.preview.emergentagent.com/api"
+BASE_URL = "https://web3-vocab-daily.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 def print_test_header(test_name):
