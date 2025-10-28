@@ -1583,7 +1583,7 @@ Hãy tạo bài viết social post theo đúng cấu trúc và tone đã chỉ �
 # NEWS DISTRIBUTOR ENDPOINTS
 # ========================================
 
-async def scrape_full_article_content(url: str) -> str:
+def scrape_full_article_content(url: str) -> str:
     """Scrape full article content from URL using BeautifulSoup"""
     try:
         headers = {
