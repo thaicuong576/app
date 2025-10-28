@@ -226,8 +226,30 @@ const NewsDistributor = () => {
       // Update vocabulary count
       setTotalVocabulary(data.total_vocab_count);
       
-      // Show summary
-      setVocabularyOutput(`✅ Tự động trích xuất hoàn thành!\n\n📊 Thống kê:\n- Ngày đã chọn: ${selectedDate}\n- Tổng số bài viết: ${data.total_articles}\n- Đã xử lý: ${data.processed_articles} bài\n- Từ vựng mới: ${data.new_vocab_count}\n- Tổng từ vựng: ${data.total_vocab_count}`);
+      // Format output with content templates for each article
+      if (data.article_outputs && data.article_outputs.length > 0) {
+        let formattedOutput = `✅ Tự động trích xuất hoàn thành!\n\n`;
+        formattedOutput += `📊 Thống kê:\n`;
+        formattedOutput += `- Ngày đã chọn: ${selectedDate}\n`;
+        formattedOutput += `- Tổng số bài viết: ${data.total_articles}\n`;
+        formattedOutput += `- Đã xử lý: ${data.processed_articles} bài\n`;
+        formattedOutput += `- Từ vựng mới: ${data.new_vocab_count}\n`;
+        formattedOutput += `- Tổng từ vựng: ${data.total_vocab_count}\n\n`;
+        formattedOutput += `${'='.repeat(80)}\n\n`;
+        
+        // Add each article's content template
+        data.article_outputs.forEach((article, index) => {
+          formattedOutput += `📰 BÀI ${index + 1}: ${article.title}\n`;
+          formattedOutput += `🔗 Link: ${article.link}\n`;
+          formattedOutput += `📚 Từ vựng: ${article.vocab_count} từ (${article.new_vocab_count} mới)\n\n`;
+          formattedOutput += `${article.content_template}\n\n`;
+          formattedOutput += `${'-'.repeat(80)}\n\n`;
+        });
+        
+        setVocabularyOutput(formattedOutput);
+      } else {
+        setVocabularyOutput(`✅ Tự động trích xuất hoàn thành!\n\n📊 Thống kê:\n- Ngày đã chọn: ${selectedDate}\n- Tổng số bài viết: ${data.total_articles}\n- Đã xử lý: ${data.processed_articles} bài\n- Từ vựng mới: ${data.new_vocab_count}\n- Tổng từ vựng: ${data.total_vocab_count}\n\nKhông có từ vựng mới nào được thu thập (có thể tất cả đã có trong kho).`);
+      }
       
     } catch (error) {
       toast({
