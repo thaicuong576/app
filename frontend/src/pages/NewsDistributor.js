@@ -323,9 +323,64 @@ const NewsDistributor = () => {
             </p>
           </div>
 
-          {/* Article Selection Section */}
+          {/* Date Selection & Auto Extract Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Chọn bài viết để phân tích</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-red-500" />
+              Chọn ngày để trích xuất từ vựng
+            </h2>
+            
+            {/* Date Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Chọn ngày phát hành bài viết:
+              </label>
+              <select
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              >
+                <option value="">-- Chọn ngày --</option>
+                {availableDates.map((date) => (
+                  <option key={date} value={date}>
+                    {new Date(date).toLocaleDateString('vi-VN', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Auto Extract Button */}
+            <button
+              onClick={handleAutoExtract}
+              disabled={!selectedDate || isAutoExtracting}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAutoExtracting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Đang tự động xử lý...
+                </>
+              ) : (
+                <>
+                  <Play className="h-5 w-5" />
+                  Tự động trích xuất tất cả bài viết trong ngày
+                </>
+              )}
+            </button>
+
+            <p className="text-sm text-gray-500 mt-2 text-center">
+              Hệ thống sẽ tự động xử lý tất cả bài viết trong ngày đã chọn
+            </p>
+          </div>
+
+          {/* Manual Article Selection Section */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Hoặc chọn bài viết thủ công</h2>
             
             {/* Search Bar */}
             <div className="relative mb-4">
@@ -383,7 +438,7 @@ const NewsDistributor = () => {
               ) : (
                 <>
                   <BookOpen className="h-5 w-5" />
-                  Trích xuất từ vựng
+                  Trích xuất từ vựng từ bài này
                 </>
               )}
             </button>
