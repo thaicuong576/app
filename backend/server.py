@@ -2021,11 +2021,15 @@ CHÚ Ý:
 - Không thêm số thứ tự, bullet points, hoặc ký tự đặc biệt
 - Không thêm bất kỳ text nào khác ngoài template trên"""
         
+        # Store article outputs
+        article_outputs = []
+        
         # Process each article
         for article in articles:
             try:
                 article_id = article.get("id", "")
                 title = article.get("title", "")
+                link = article.get("link", "")
                 content = article.get("content", "") or article.get("description", "")
                 
                 if not content or len(content.strip()) < 10:
@@ -2053,7 +2057,8 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
                 response = await llm_chat.send_message(user_message)
                 generated_content = response.strip()
                 
-                # Parse vocabulary
+                # Parse vocabulary and save to DB
+                article_vocab_list = []
                 new_vocab_count = 0
                 lines = generated_content.split("\n")
                 
@@ -2068,6 +2073,10 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
                             word = parts[0].strip()
                             definition = parts[1].strip()
                             
+                            # Add to this article's vocab list (for output)
+                            article_vocab_list.append(f"{word} - {definition}")
+                            
+                            # Save to database if not exists
                             if word.lower() not in existing_words_lowercase:
                                 vocab_item = VocabularyItem(
                                     word=word.lower(),
@@ -2082,8 +2091,19 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
                                 new_vocab_count += 1
                                 total_new_vocab += 1
                 
+                # Create content template for this article
+                if article_vocab_list:
+                    article_output = {
+                        "title": title,
+                        "link": link,
+                        "vocab_count": len(article_vocab_list),
+                        "new_vocab_count": new_vocab_count,
+                        "content_template": "Từ vựng web3 cần học hôm nay:\n" + "\n".join(article_vocab_list)
+                    }
+                    article_outputs.append(article_output)
+                
                 processed_articles += 1
-                logging.info(f"✅ Extracted {new_vocab_count} new vocab from: {title[:50]}...")
+                logging.info(f"✅ Extracted {len(article_vocab_list)} vocab ({new_vocab_count} new) from: {title[:50]}...")
                 
             except Exception as e:
                 logging.error(f"Error processing article {title[:50]}: {e}")
@@ -2098,7 +2118,8 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu.
             "total_articles": len(articles),
             "processed_articles": processed_articles,
             "new_vocab_count": total_new_vocab,
-            "total_vocab_count": total_vocab_count
+            "total_vocab_count": total_vocab_count,
+            "article_outputs": article_outputs
         }
     
     except Exception as e:
