@@ -1626,7 +1626,7 @@ def scrape_full_article_content(url: str) -> str:
 
 @api_router.post("/news-distributor/refresh-rss")
 async def refresh_rss_feed():
-    """Fetch and parse RSS feed from CoinTelegraph, save articles to database"""
+    """Fetch and parse RSS feed from CoinTelegraph, save articles to database (NO URL scraping - RSS data only)"""
     try:
         import feedparser
         
@@ -1643,33 +1643,26 @@ async def refresh_rss_feed():
         articles_updated = 0
         
         for entry in feed.entries:
-            # Extract data from RSS entry
+            # Extract ONLY RSS data: title, description (overview), published_date
+            # NO URL scraping to avoid 403 errors
             summary = entry.get("summary", "")
+            
+            # Try to get content from RSS content field first
             content_list = entry.get("content", [])
             content_value = ""
             
-            # Try to get content from content field first
             if content_list and isinstance(content_list, list) and len(content_list) > 0:
                 content_value = content_list[0].get("value", "")
             
-            # If no content, use summary
+            # If no content, use summary as content
             if not content_value:
                 content_value = summary
             
-            # Try to scrape full article content from URL
-            article_link = entry.get("link", "")
-            if article_link and (not content_value or len(content_value) < 200):
-                logging.info(f"🔍 Attempting to scrape full content from: {article_link}")
-                scraped_content = scrape_full_article_content(article_link)
-                if scraped_content:
-                    content_value = scraped_content
-                    logging.info(f"✅ Successfully scraped {len(scraped_content)} characters")
-            
             article_data = {
                 "title": entry.get("title", ""),
-                "description": summary,
-                "link": article_link,
-                "content": content_value,
+                "description": summary,  # Overview paragraph
+                "link": entry.get("link", ""),
+                "content": content_value,  # RSS content or summary
                 "published_date": entry.get("published", ""),
                 "guid": entry.get("id", entry.get("link", ""))
             }
@@ -1694,7 +1687,7 @@ async def refresh_rss_feed():
         
         total_articles = await db.rss_news_articles.count_documents({})
         
-        logging.info(f"✅ RSS refresh complete: {articles_saved} new, {articles_updated} updated, {total_articles} total")
+        logging.info(f"✅ RSS refresh complete (RSS data only, no URL scraping): {articles_saved} new, {articles_updated} updated, {total_articles} total")
         
         return {
             "message": "RSS feed refreshed successfully",
