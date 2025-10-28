@@ -2129,13 +2129,16 @@ Hãy trích xuất TẤT CẢ từ vựng phù hợp với tiêu chí đã nêu 
         
         total_vocab_count = await db.vocabulary.count_documents({})
         
-        # Build output content in template format
+        # Build output content in categorized format
         if vocab_list:
             output_content = "Từ vựng web3 cần học hôm nay:\n\n" + "\n".join(vocab_list)
         else:
             output_content = "Không có từ vựng mới nào được thu thập."
         
-        logging.info(f"🎉 Extraction complete for date {selected_date}: {len(vocab_list)} vocab extracted, {new_vocab_count} new, {total_vocab_count} total in store")
+        # Count actual vocab items (not including category headers)
+        vocab_count = len([v for v in vocab_list if v.startswith("+")])
+        
+        logging.info(f"🎉 Extraction complete for date {selected_date}: {vocab_count} vocab extracted, {new_vocab_count} new, {total_vocab_count} total in store")
         
         return {
             "message": "Vocabulary extraction completed successfully",
