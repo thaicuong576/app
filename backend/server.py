@@ -1957,20 +1957,33 @@ async def auto_extract_vocabulary(selected_date: str = None):
     """Extract vocabulary from ALL articles in a date group (combines all titles + descriptions)"""
     try:
         from datetime import datetime
+        from dateutil import parser as date_parser
         
         if not selected_date:
             raise HTTPException(status_code=400, detail="selected_date is required")
         
-        # Filter articles by date
+        # Get ALL articles (we'll filter by parsing dates)
         logging.info(f"📅 Extracting vocabulary for date group: {selected_date}")
-        query = {"published_date": {"$regex": f"^{selected_date}"}}
+        all_articles = await db.rss_news_articles.find({}, {"_id": 0}).to_list(length=None)
         
-        # Get ALL articles from selected date
-        articles = await db.rss_news_articles.find(query, {"_id": 0}).to_list(length=None)
+        # Filter articles by parsing published_date and matching selected_date
+        articles = []
+        for article in all_articles:
+            pub_date = article.get("published_date", "")
+            if pub_date:
+                try:
+                    dt = date_parser.parse(pub_date)
+                    article_date = dt.strftime("%Y-%m-%d")
+                    if article_date == selected_date:
+                        articles.append(article)
+                except Exception as e:
+                    logging.warning(f"Failed to parse date {pub_date}: {e}")
+                    continue
         
         if not articles:
             return {
                 "message": "No articles found for the selected date",
+                "selected_date": selected_date,
                 "total_articles": 0,
                 "new_vocab_count": 0,
                 "total_vocab_count": 0,
@@ -1983,11 +1996,18 @@ async def auto_extract_vocabulary(selected_date: str = None):
         combined_content = ""
         for i, article in enumerate(articles, 1):
             title = article.get("title", "")
+            # Use description first, fallback to content
             description = article.get("description", "") or article.get("content", "")
+            
+            # Strip HTML tags from description if present
+            from bs4 import BeautifulSoup
+            if description and ('<' in description and '>' in description):
+                soup = BeautifulSoup(description, 'html.parser')
+                description = soup.get_text(separator=' ', strip=True)
             
             combined_content += f"\n\n--- News {i} ---\n"
             combined_content += f"Title: {title}\n"
-            combined_content += f"Overview: {description}\n"
+            combined_content += f"Overview: {description[:500]}\n"  # Limit to 500 chars per article
         
         logging.info(f"📦 Combined content length: {len(combined_content)} characters")
         
