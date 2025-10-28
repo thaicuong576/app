@@ -1626,11 +1626,11 @@ def scrape_full_article_content(url: str) -> str:
 
 @api_router.post("/news-distributor/refresh-rss")
 async def refresh_rss_feed():
-    """Fetch and parse RSS feed from CoinDesk, save articles to database"""
+    """Fetch and parse RSS feed from CoinTelegraph, save articles to database"""
     try:
         import feedparser
         
-        RSS_URL = "https://www.coindesk.com/arc/outboundfeeds/rss/"
+        RSS_URL = "https://cointelegraph.com/rss"
         logging.info(f"📡 Fetching RSS feed from: {RSS_URL}")
         
         # Parse RSS feed
